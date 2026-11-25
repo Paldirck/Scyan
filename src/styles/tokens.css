@@ -1,0 +1,43 @@
+:root {
+  /* 60-30-10 Scientific Dark Slate Palette */
+  --bg-canvas: #0b1120;
+  --bg-surface: #11192c;
+  --bg-surface-elevated: #172238;
+  --bg-input: #0d1424;
+
+  --border-hairline: #23304d;
+  --border-strong: #33466e;
+
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+
+  /* Focal Accents (10% Budget) */
+  --accent-primary: #4f46e5;
+  --accent-primary-hover: #6366f1;
+  --accent-cyan: #0ea5e9;
+  --accent-emerald: #10b981;
+  --accent-amber: #f59e0b;
+  --accent-purple: #a855f7;
+  --accent-rose: #f43f5e;
+
+  /* Typography */
+  --font-display: 'Outfit', system-ui, -apple-system, sans-serif;
+  --font-body: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
+
+  /* Spacing & Radii */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+
+  /* Motion */
+  --ease-settle: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+
+  /* Layout */
+  --header-height: 60px;
+  --container-max: 1360px;
+}

@@ -1,0 +1,243 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global safety net: deny everything by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Hardened Global Helpers
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidString(val, minLen, maxLen) {
+      return val is string && val.size() >= minLen && val.size() <= maxLen;
+    }
+
+    function isValidStringList(arr, maxLen) {
+      return arr is list && arr.size() <= maxLen && (arr.size() == 0 || arr[0] is string);
+    }
+
+    // Validation Blueprint: UserPrivateProfile (/users/{userId})
+    function isValidUserPrivateProfile(data, isCreate) {
+      let requiredKeys = ['uid', 'username', 'authProvider', 'createdAt', 'updatedAt'];
+      let allowedKeys = ['uid', 'username', 'email', 'authProvider', 'createdAt', 'updatedAt'];
+      let hasEmail = 'email' in data;
+
+      return data.keys().hasAll(requiredKeys)
+        && data.keys().hasOnly(allowedKeys)
+        && isValidId(data.uid)
+        && data.uid == request.auth.uid
+        && isValidString(data.username, 3, 32)
+        && data.username.matches('^[a-zA-Z0-9_.\\-]+$')
+        && (!hasEmail || (isValidString(data.email, 3, 120) && data.email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')))
+        && data.authProvider in ['google', 'password']
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp
+        && (isCreate ? data.createdAt == request.time : true)
+        && data.updatedAt == request.time;
+    }
+
+    // Validation Blueprint: UserProgress (/userProgress/{userId})
+    function isValidUserProgress(data) {
+      let requiredKeys = [
+        'uid', 'namaAlias', 'xp', 'level', 'totalPoin',
+        'materiSelesai', 'kuisSelesai', 'badges', 'dailyClaimedDate',
+        'isPremium', 'premiumPlan', 'premiumPaymentId', 'updatedAt'
+      ];
+
+      return data.keys().hasAll(requiredKeys)
+        && data.keys().hasOnly(requiredKeys)
+        && isValidId(data.uid)
+        && data.uid == request.auth.uid
+        && isValidString(data.namaAlias, 1, 32)
+        && data.xp is int && data.xp >= 0 && data.xp <= 1000000
+        && data.level is int && data.level >= 1 && data.level <= 1000
+        && data.totalPoin is int && data.totalPoin >= 0 && data.totalPoin <= 1000000
+        && isValidStringList(data.materiSelesai, 24)
+        && isValidStringList(data.kuisSelesai, 40)
+        && isValidStringList(data.badges, 20)
+        && isValidString(data.dailyClaimedDate, 0, 16)
+        && data.dailyClaimedDate.matches('^(\\d{4}-\\d{2}-\\d{2})?$')
+        && data.isPremium is bool
+        && isValidString(data.premiumPlan, 0, 40)
+        && data.premiumPlan.matches('^(premium_achievements)?$')
+        && isValidString(data.premiumPaymentId, 0, 128)
+        && data.premiumPaymentId.matches('^[a-zA-Z0-9_\\-]*$')
+        && data.updatedAt is timestamp
+        && data.updatedAt == request.time;
+    }
+
+    function hasSamePremiumFields() {
+      return ('isPremium' in existing())
+        && incoming().isPremium == existing().isPremium
+        && incoming().premiumPlan == existing().premiumPlan
+        && incoming().premiumPaymentId == existing().premiumPaymentId;
+    }
+
+    function isValidLegacyPremiumInit() {
+      return !('isPremium' in existing())
+        && incoming().isPremium == false
+        && incoming().premiumPlan == ''
+        && incoming().premiumPaymentId == '';
+    }
+
+    function isValidPremiumActivation() {
+      return incoming().isPremium == true
+        && incoming().premiumPlan == 'premium_achievements'
+        && isValidId(incoming().premiumPaymentId)
+        && getAfter(/databases/$(database)/documents/payments/$(incoming().premiumPaymentId)).data.uid == request.auth.uid
+        && getAfter(/databases/$(database)/documents/payments/$(incoming().premiumPaymentId)).data.status == 'paid'
+        && getAfter(/databases/$(database)/documents/payments/$(incoming().premiumPaymentId)).data.planId == 'premium_achievements'
+        && getAfter(/databases/$(database)/documents/payments/$(incoming().premiumPaymentId)).data.amountIdr == 1;
+    }
+
+    // Validation Blueprint: LeaderboardEntry (/leaderboard/{userId})
+    function isValidLeaderboardEntry(data) {
+      let requiredKeys = ['uid', 'namaAlias', 'level', 'totalPoin', 'isPublic', 'updatedAt'];
+
+      return data.keys().hasAll(requiredKeys)
+        && data.keys().hasOnly(requiredKeys)
+        && isValidId(data.uid)
+        && data.uid == request.auth.uid
+        && isValidString(data.namaAlias, 1, 32)
+        && data.level is int && data.level >= 1 && data.level <= 1000
+        && data.totalPoin is int && data.totalPoin >= 0 && data.totalPoin <= 1000000
+        && data.isPublic is bool
+        && data.updatedAt is timestamp
+        && data.updatedAt == request.time;
+    }
+
+    // Validation Blueprint: PaymentTransaction (/payments/{paymentId})
+    function isValidPaymentTransaction(data, paymentId, isCreate) {
+      let requiredKeys = [
+        'paymentId', 'uid', 'planId', 'amountIdr', 'method',
+        'status', 'qrPayload', 'createdAt', 'updatedAt'
+      ];
+
+      return data.keys().hasAll(requiredKeys)
+        && data.keys().hasOnly(requiredKeys)
+        && isValidId(data.paymentId)
+        && data.paymentId == paymentId
+        && isValidId(data.uid)
+        && data.uid == request.auth.uid
+        && data.planId == 'premium_achievements'
+        && data.amountIdr is int && data.amountIdr == 1
+        && data.method == 'qris'
+        && data.status in ['pending', 'paid', 'cancelled']
+        && isValidString(data.qrPayload, 10, 256)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp
+        && (isCreate ? (data.createdAt == request.time && data.status == 'pending') : true)
+        && data.updatedAt == request.time;
+    }
+
+    // 1. Private User Account Profile (PII isolated strictly to owner)
+    match /users/{userId} {
+      allow get: if isValidId(userId) && isOwner(userId);
+      allow list: if false;
+      allow create: if isValidId(userId)
+        && isOwner(userId)
+        && isValidUserPrivateProfile(incoming(), true);
+      allow update: if isValidId(userId)
+        && isOwner(userId)
+        && isValidUserPrivateProfile(incoming(), false)
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().authProvider == existing().authProvider
+        && incoming().diff(existing()).affectedKeys().hasOnly(['username', 'email', 'updatedAt']);
+      allow delete: if false;
+    }
+
+    // 2. Private User Learning Progress & Premium Entitlement
+    match /userProgress/{userId} {
+      allow get: if isValidId(userId) && isOwner(userId);
+      allow list: if false;
+      allow create: if isValidId(userId)
+        && isOwner(userId)
+        && isValidUserProgress(incoming())
+        && incoming().isPremium == false
+        && incoming().premiumPlan == ''
+        && incoming().premiumPaymentId == '';
+      allow update: if isValidId(userId)
+        && isOwner(userId)
+        && isValidUserProgress(incoming())
+        && incoming().uid == existing().uid
+        && (
+          // Action 1: Update display alias
+          (hasSamePremiumFields() && incoming().diff(existing()).affectedKeys().hasOnly(['namaAlias', 'updatedAt'])) ||
+          // Action 2: Sync learning progress / reset XP
+          (hasSamePremiumFields() && incoming().diff(existing()).affectedKeys().hasOnly([
+            'xp', 'level', 'totalPoin',
+            'materiSelesai', 'kuisSelesai', 'badges', 'dailyClaimedDate', 'updatedAt'
+          ])) ||
+          // Action 3: Migrate legacy userProgress docs missing premium fields
+          (isValidLegacyPremiumInit() && incoming().diff(existing()).affectedKeys().hasOnly([
+            'isPremium', 'premiumPlan', 'premiumPaymentId', 'updatedAt'
+          ])) ||
+          // Action 4: Activate Premium atomically with paid QR payment
+          (isValidPremiumActivation() && incoming().diff(existing()).affectedKeys().hasOnly([
+            'isPremium', 'premiumPlan', 'premiumPaymentId', 'updatedAt'
+          ]))
+        );
+      allow delete: if isValidId(userId) && isOwner(userId);
+    }
+
+    // 3. Public Non-PII Leaderboard Entries
+    match /leaderboard/{userId} {
+      allow get: if isValidId(userId) && (isOwner(userId) || (isSignedIn() && resource != null && existing().isPublic == true));
+      allow list: if isSignedIn() && existing().isPublic == true;
+      allow create: if isValidId(userId)
+        && isOwner(userId)
+        && isValidLeaderboardEntry(incoming());
+      allow update: if isValidId(userId)
+        && isOwner(userId)
+        && isValidLeaderboardEntry(incoming())
+        && incoming().uid == existing().uid
+        && incoming().diff(existing()).affectedKeys().hasOnly(['namaAlias', 'level', 'totalPoin', 'isPublic', 'updatedAt']);
+      allow delete: if isValidId(userId) && isOwner(userId);
+    }
+
+    // 4. QR Payment Transactions (Terminal State Locked)
+    match /payments/{paymentId} {
+      allow get: if isValidId(paymentId) && isSignedIn() && (resource == null || isOwner(existing().uid));
+      allow list: if isSignedIn() && existing().uid == request.auth.uid;
+      allow create: if isValidId(paymentId)
+        && isSignedIn()
+        && isValidPaymentTransaction(incoming(), paymentId, true);
+      allow update: if isValidId(paymentId)
+        && isSignedIn()
+        && isOwner(existing().uid)
+        && existing().status == 'pending'
+        && isValidPaymentTransaction(incoming(), paymentId, false)
+        && incoming().uid == existing().uid
+        && incoming().paymentId == existing().paymentId
+        && incoming().planId == existing().planId
+        && incoming().amountIdr == existing().amountIdr
+        && incoming().method == existing().method
+        && incoming().qrPayload == existing().qrPayload
+        && incoming().createdAt == existing().createdAt
+        && incoming().status in ['paid', 'cancelled']
+        && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']);
+      allow delete: if false;
+    }
+  }
+}

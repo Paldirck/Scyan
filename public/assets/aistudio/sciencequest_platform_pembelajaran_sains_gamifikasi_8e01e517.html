@@ -1,0 +1,1992 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScienceQuest - Petualangan Sains Interaktif</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        quest: {
+                            dark: '#0B0F19',
+                            card: '#161F33',
+                            border: '#2A3859',
+                            accent: '#6366F1',
+                            cyan: '#06B6D4',
+                            emerald: '#10B981',
+                            purple: '#A855F7',
+                            amber: '#F59E0B',
+                            rose: '#F43F5E'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Segoe UI', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Phosphor Icons CDN -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Canvas Confetti for Achievements -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        /* Custom Styles & Glassmorphism */
+        body {
+            background-color: #0B0F19;
+            color: #F3F4F6;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            overflow-x: hidden;
+        }
+        .glass-panel {
+            background: rgba(22, 31, 51, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-card {
+            background: rgba(30, 41, 67, 0.6);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(99, 102, 241, 0.4);
+            box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.15);
+        }
+        .neon-glow-cyan {
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.35);
+        }
+        .neon-glow-purple {
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.35);
+        }
+        .neon-glow-emerald {
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.35);
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0B0F19;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2A3859;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6366F1;
+        }
+        /* Markdown / Spec view styling */
+        .spec-doc h1 { font-size: 1.85rem; font-weight: 800; color: #38BDF8; margin-top: 1.5rem; margin-bottom: 0.75rem; border-bottom: 1px solid #2A3859; padding-bottom: 0.5rem; }
+        .spec-doc h2 { font-size: 1.4rem; font-weight: 700; color: #818CF8; margin-top: 1.25rem; margin-bottom: 0.5rem; }
+        .spec-doc h3 { font-size: 1.15rem; font-weight: 600; color: #34D399; margin-top: 1rem; margin-bottom: 0.4rem; }
+        .spec-doc p { margin-bottom: 0.75rem; color: #D1D5DB; line-height: 1.6; }
+        .spec-doc ul, .spec-doc ol { margin-left: 1.5rem; margin-bottom: 1rem; color: #D1D5DB; list-style-type: disc; }
+        .spec-doc code { background: #1E293B; color: #F472B6; padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.875em; }
+        .spec-doc table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+        .spec-doc th, .spec-doc td { border: 1px solid #2A3859; padding: 0.5rem 0.75rem; text-align: left; }
+        .spec-doc th { background: #1E2942; color: #38BDF8; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-quest-dark text-gray-100">
+
+    <!-- TOP NAVIGATION BAR -->
+    <header class="sticky top-0 z-40 glass-panel border-b border-quest-border/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <!-- Brand Logo -->
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="navigateTo('dashboard')">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-cyan-400 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
+                    <i class="ph-bold ph-atom text-2xl"></i>
+                </div>
+                <div>
+                    <span class="text-xl font-extrabold bg-gradient-to-r from-cyan-400 via-indigo-300 to-purple-400 bg-clip-text text-transparent">ScienceQuest</span>
+                    <span class="text-xs px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-800/60 ml-2 hidden sm:inline-block">Edukasi SMP/SMA</span>
+                </div>
+            </div>
+
+            <!-- User Status Header Summary -->
+            <div class="flex items-center space-x-3 sm:space-x-6">
+                <!-- Level Badge -->
+                <div class="flex items-center space-x-2 bg-quest-card px-3 py-1.5 rounded-full border border-quest-border">
+                    <i class="ph-fill ph-trophy text-amber-400 text-lg"></i>
+                    <div class="text-xs">
+                        <span class="text-gray-400 block -mb-1 text-[10px]">LEVEL</span>
+                        <span id="nav-level-val" class="font-bold text-amber-300">Lv. 1</span>
+                    </div>
+                </div>
+
+                <!-- XP Bar -->
+                <div class="hidden md:flex flex-col w-32">
+                    <div class="flex justify-between text-xs mb-1">
+                        <span class="text-gray-400">XP</span>
+                        <span id="nav-xp-text" class="text-cyan-400 font-semibold">0/100</span>
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden border border-slate-700">
+                        <div id="nav-xp-bar" class="bg-gradient-to-r from-cyan-500 to-indigo-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Total Points -->
+                <div class="flex items-center space-x-1.5 text-emerald-400 font-bold bg-emerald-950/40 border border-emerald-800/40 px-3 py-1.5 rounded-full">
+                    <i class="ph-bold ph-lightning text-lg"></i>
+                    <span id="nav-points-val">0</span> <span class="text-xs font-normal text-emerald-300">PTS</span>
+                </div>
+
+                <!-- SPEC.md Documentation Toggle Button -->
+                <button onclick="openSpecModal()" class="flex items-center space-x-1 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white px-3 py-1.5 rounded-lg text-xs border border-slate-700 transition">
+                    <i class="ph-bold ph-file-text text-indigo-400"></i>
+                    <span class="hidden sm:inline">SPEC.md</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN WRAPPER CONTAINER WITH SIDEBAR & CONTENT -->
+    <div class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col md:flex-row gap-6">
+
+        <!-- SIDEBAR NAVIGATION -->
+        <aside class="w-full md:w-64 flex-shrink-0 space-y-2">
+            <div class="glass-panel p-3 rounded-2xl border border-quest-border flex flex-row md:flex-col gap-1 overflow-x-auto">
+                <button onclick="navigateTo('dashboard')" id="nav-btn-dashboard" class="nav-btn active flex items-center space-x-3 w-full px-4 py-3 rounded-xl text-sm font-medium transition text-white bg-indigo-600/30 border border-indigo-500/40">
+                    <i class="ph-bold ph-squares-four text-lg text-indigo-400"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button onclick="navigateTo('learn')" id="nav-btn-learn" class="nav-btn flex items-center space-x-3 w-full px-4 py-3 rounded-xl text-sm font-medium transition text-slate-300 hover:bg-slate-800/60 hover:text-white">
+                    <i class="ph-bold ph-book-open text-lg text-cyan-400"></i>
+                    <span>Materi & Kuis</span>
+                </button>
+                <button onclick="navigateTo('simulations')" id="nav-btn-simulations" class="nav-btn flex items-center space-x-3 w-full px-4 py-3 rounded-xl text-sm font-medium transition text-slate-300 hover:bg-slate-800/60 hover:text-white">
+                    <i class="ph-bold ph-flask text-lg text-purple-400"></i>
+                    <span>Lab Simulasi</span>
+                </button>
+                <button onclick="navigateTo('leaderboard')" id="nav-btn-leaderboard" class="nav-btn flex items-center space-x-3 w-full px-4 py-3 rounded-xl text-sm font-medium transition text-slate-300 hover:bg-slate-800/60 hover:text-white">
+                    <i class="ph-bold ph-ranking text-lg text-amber-400"></i>
+                    <span>Leaderboard</span>
+                </button>
+                <button onclick="navigateTo('achievements')" id="nav-btn-achievements" class="nav-btn flex items-center space-x-3 w-full px-4 py-3 rounded-xl text-sm font-medium transition text-slate-300 hover:bg-slate-800/60 hover:text-white">
+                    <i class="ph-bold ph-medal text-lg text-emerald-400"></i>
+                    <span>Pencapaian</span>
+                </button>
+            </div>
+
+            <!-- Profile Summary Box -->
+            <div class="glass-panel p-4 rounded-2xl border border-quest-border space-y-3">
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 p-0.5">
+                        <div class="w-full h-full bg-quest-dark rounded-full flex items-center justify-center font-bold text-lg text-indigo-300" id="user-avatar-initial">
+                            P
+                        </div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h4 id="user-profile-alias" class="text-sm font-bold text-gray-100 truncate">Pelajar ScienceQuest</h4>
+                        <p class="text-xs text-gray-400" id="user-profile-title">Penjelajah Sains Muda</p>
+                    </div>
+                </div>
+                
+                <div class="pt-2 border-t border-quest-border/60 text-xs text-gray-400 space-y-1.5">
+                    <div class="flex justify-between">
+                        <span>Materi Selesai:</span>
+                        <span id="sidebar-lessons-done" class="font-bold text-cyan-400">0/12</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Badge Didapat:</span>
+                        <span id="sidebar-badges-count" class="font-bold text-amber-400">0/6</span>
+                    </div>
+                </div>
+
+                <button onclick="confirmResetProgress()" class="w-full py-2 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/50 rounded-xl text-xs font-semibold flex items-center justify-center space-x-2 transition">
+                    <i class="ph-bold ph-arrows-counter-clockwise"></i>
+                    <span>Reset Progres Belajar</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- MAIN VIEW AREA -->
+        <main class="flex-1 min-w-0 space-y-6">
+
+            <!-- VIEW 1: DASHBOARD -->
+            <section id="view-dashboard" class="space-y-6">
+                <!-- Hero Welcome Card -->
+                <div class="relative overflow-hidden glass-panel p-6 sm:p-8 rounded-3xl border border-quest-border bg-gradient-to-r from-indigo-950/60 via-quest-card to-purple-950/40">
+                    <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                    <div class="relative z-10 max-w-xl">
+                        <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-semibold mb-3">
+                            <i class="ph-bold ph-sparkle"></i>
+                            <span>Petualangan Sains Harian</span>
+                        </div>
+                        <h1 class="text-2xl sm:text-3xl font-black text-white leading-tight">
+                            Selamat Datang, <span id="hero-user-name" class="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">Pelajar</span>!
+                        </h1>
+                        <p class="text-sm text-slate-300 mt-2">
+                            Jelajahi konsep Fisika, Kimia, Biologi, dan Astronomi secara interaktif. Selesaikan kuis, uji simulasi, dan capai peringkat tertinggi!
+                        </p>
+                        <div class="mt-5 flex flex-wrap gap-3">
+                            <button onclick="navigateTo('learn')" class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-bold rounded-xl text-sm shadow-lg shadow-indigo-600/30 transition flex items-center space-x-2">
+                                <i class="ph-bold ph-play-circle text-lg"></i>
+                                <span>Mulai Belajar</span>
+                            </button>
+                            <button onclick="navigateTo('simulations')" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl text-sm transition flex items-center space-x-2">
+                                <i class="ph-bold ph-atom text-lg text-cyan-400"></i>
+                                <span>Uji Simulasi Lab</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Daily Challenge Box -->
+                <div class="glass-panel p-5 rounded-2xl border border-quest-cyan/30 bg-cyan-950/20 relative overflow-hidden">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-12 h-12 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-300 text-2xl flex-shrink-0">
+                                <i class="ph-bold ph-calendar-check"></i>
+                            </div>
+                            <div>
+                                <div class="flex items-center space-x-2">
+                                    <h3 class="font-bold text-white text-base">Tantangan Harian</h3>
+                                    <span id="daily-date-tag" class="text-xs px-2 py-0.5 rounded bg-cyan-900/60 text-cyan-300 font-mono">--/--/----</span>
+                                </div>
+                                <p id="daily-challenge-desc" class="text-xs text-slate-300 mt-1">Memuat tantangan harian sains hari ini...</p>
+                                <div class="text-xs font-semibold text-emerald-400 mt-1 flex items-center space-x-1">
+                                    <i class="ph-bold ph-gift"></i>
+                                    <span>Hadiah: +50 XP & +30 PTS</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button id="btn-claim-daily" onclick="claimDailyChallenge()" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs rounded-xl transition shadow-md flex items-center space-x-1.5 whitespace-nowrap">
+                            <i class="ph-bold ph-check-circle"></i>
+                            <span>Selesaikan Tantangan</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Subject Categories Grid & Progress -->
+                <div>
+                    <h2 class="text-lg font-bold text-white mb-4 flex items-center space-x-2">
+                        <i class="ph-bold ph-shapes text-cyan-400"></i>
+                        <span>Kategori Pembelajaran Sains</span>
+                    </h2>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="categories-grid">
+                        <!-- Category cards populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Overview Stats Cards -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div class="glass-panel p-4 rounded-2xl border border-quest-border flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xl">
+                            <i class="ph-bold ph-book-open text-indigo-400"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs text-gray-400">Materi Selesai</div>
+                            <div id="stat-completed-lessons" class="text-lg font-bold text-white">0 / 12</div>
+                        </div>
+                    </div>
+                    <div class="glass-panel p-4 rounded-2xl border border-quest-border flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-xl">
+                            <i class="ph-bold ph-question text-purple-400"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs text-gray-400">Kuis Lulus</div>
+                            <div id="stat-completed-quizzes" class="text-lg font-bold text-white">0 / 20</div>
+                        </div>
+                    </div>
+                    <div class="glass-panel p-4 rounded-2xl border border-quest-border flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-xl">
+                            <i class="ph-bold ph-medal text-amber-400"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs text-gray-400">Badges Unlocked</div>
+                            <div id="stat-badges-unlocked" class="text-lg font-bold text-white">0 / 6</div>
+                        </div>
+                    </div>
+                    <div class="glass-panel p-4 rounded-2xl border border-quest-border flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl">
+                            <i class="ph-bold ph-chart-line-up text-emerald-400"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs text-gray-400">Akurasi Jawaban</div>
+                            <div id="stat-accuracy" class="text-lg font-bold text-white">0%</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW 2: MATERI & KUIS LIST / READER -->
+            <section id="view-learn" class="space-y-6 hidden">
+                <!-- Category Filter Pills -->
+                <div class="flex items-center justify-between flex-wrap gap-3">
+                    <h2 class="text-xl font-bold text-white flex items-center space-x-2">
+                        <i class="ph-bold ph-book-bookmark text-indigo-400"></i>
+                        <span>Modul Belajar & Kuis Interaktif</span>
+                    </h2>
+                    <div class="flex flex-wrap gap-2" id="category-filters">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Lessons & Quizzes Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="lessons-grid">
+                    <!-- Populated by JS -->
+                </div>
+            </section>
+
+            <!-- VIEW 3: SIMULASI LAB (INTERACTIVE SIMULATIONS) -->
+            <section id="view-simulations" class="space-y-6 hidden">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-xl font-bold text-white flex items-center space-x-2">
+                            <i class="ph-bold ph-flask text-purple-400"></i>
+                            <span>Laboratorium Simulasi Sains</span>
+                        </h2>
+                        <p class="text-xs text-gray-400">Eksperimen interaktif konsep Fisika & Astronomi secara real-time</p>
+                    </div>
+                </div>
+
+                <!-- Simulation Tabs -->
+                <div class="flex border-b border-quest-border space-x-4">
+                    <button onclick="switchSimTab('gravity')" id="sim-tab-gravity" class="py-2.5 px-4 font-bold text-sm border-b-2 border-indigo-500 text-indigo-400 transition">
+                        1. Gravitasi & Jatuh Bebas
+                    </button>
+                    <button onclick="switchSimTab('solar')" id="sim-tab-solar" class="py-2.5 px-4 font-bold text-sm border-b-2 border-transparent text-gray-400 hover:text-white transition">
+                        2. Orbit Tata Surya
+                    </button>
+                    <button onclick="switchSimTab('circuit')" id="sim-tab-circuit" class="py-2.5 px-4 font-bold text-sm border-b-2 border-transparent text-gray-400 hover:text-white transition">
+                        3. Rangkaian Listrik Seri
+                    </button>
+                </div>
+
+                <!-- Simulation Container 1: Gravity -->
+                <div id="sim-panel-gravity" class="glass-panel p-5 rounded-2xl border border-quest-border space-y-4">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Controls -->
+                        <div class="space-y-4 bg-quest-card p-4 rounded-xl border border-quest-border/60">
+                            <h3 class="font-bold text-sm text-cyan-300 uppercase tracking-wider">Parameter Eksperimen</h3>
+                            <div>
+                                <label class="text-xs text-slate-300 flex justify-between">
+                                    <span>Tinggi Jatuh (m):</span>
+                                    <span id="sim-height-val" class="font-bold text-cyan-400">50 m</span>
+                                </label>
+                                <input type="range" id="sim-height-input" min="10" max="100" value="50" class="w-full mt-1 accent-indigo-500">
+                            </div>
+                            <div>
+                                <label class="text-xs text-slate-300 flex justify-between">
+                                    <span>Percepatan Gravitasi (g):</span>
+                                    <span id="sim-gravity-val" class="font-bold text-cyan-400">9.8 m/s² (Bumi)</span>
+                                </label>
+                                <select id="sim-gravity-select" class="w-full mt-1 bg-slate-900 border border-slate-700 text-xs rounded-lg p-2 text-white">
+                                    <option value="9.8">Bumi (g = 9.8 m/s²)</option>
+                                    <option value="1.62">Bulan (g = 1.62 m/s²)</option>
+                                    <option value="24.79">Yupiter (g = 24.79 m/s²)</option>
+                                    <option value="3.7">Mars (g = 3.7 m/s²)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-xs text-slate-300 flex justify-between">
+                                    <span>Massa Benda (kg):</span>
+                                    <span id="sim-mass-val" class="font-bold text-cyan-400">5 kg</span>
+                                </label>
+                                <input type="range" id="sim-mass-input" min="1" max="50" value="5" class="w-full mt-1 accent-indigo-500">
+                            </div>
+                            <div class="pt-2 flex space-x-2">
+                                <button onclick="startGravitySim()" class="flex-1 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-lg transition flex items-center justify-center space-x-1">
+                                    <i class="ph-bold ph-play"></i>
+                                    <span>Jatuhkan Benda</span>
+                                </button>
+                                <button onclick="resetGravitySim()" class="py-2 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-lg transition">
+                                    Reset
+                                </button>
+                            </div>
+                            <!-- Live Outputs -->
+                            <div class="p-3 bg-slate-900/80 rounded-lg text-xs space-y-1 font-mono border border-slate-800">
+                                <div class="flex justify-between"><span class="text-slate-400">Waktu Jatuh (t):</span><span id="out-sim-time" class="text-emerald-400">0.00 s</span></div>
+                                <div class="flex justify-between"><span class="text-slate-400">Kecepatan Akhir (v):</span><span id="out-sim-velocity" class="text-cyan-400">0.00 m/s</span></div>
+                                <div class="flex justify-between"><span class="text-slate-400">Energi Kinetik (Ek):</span><span id="out-sim-ek" class="text-amber-400">0 Joule</span></div>
+                            </div>
+                        </div>
+                        <!-- Canvas View -->
+                        <div class="lg:col-span-2 relative bg-slate-950 rounded-xl overflow-hidden border border-slate-800 h-80 flex flex-col items-center justify-center">
+                            <canvas id="gravityCanvas" class="w-full h-full block"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Simulation Container 2: Solar System -->
+                <div id="sim-panel-solar" class="glass-panel p-5 rounded-2xl border border-quest-border space-y-4 hidden">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-300">Simulasi Orbit Planet Terhadap Matahari (Skala Kecepatan Relatif & Hukum Kepler)</span>
+                        <div class="flex space-x-2">
+                            <button onclick="toggleSolarSim()" id="btn-solar-toggle" class="px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs rounded-lg">
+                                Pause Orbit
+                            </button>
+                        </div>
+                    </div>
+                    <div class="relative bg-slate-950 rounded-xl overflow-hidden border border-slate-800 h-96">
+                        <canvas id="solarCanvas" class="w-full h-full block"></canvas>
+                    </div>
+                </div>
+
+                <!-- Simulation Container 3: Electric Circuit -->
+                <div id="sim-panel-circuit" class="glass-panel p-5 rounded-2xl border border-quest-border space-y-4 hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Controls -->
+                        <div class="space-y-4 bg-quest-card p-4 rounded-xl border border-quest-border/60">
+                            <h3 class="font-bold text-sm text-cyan-300 uppercase tracking-wider">Hukum Ohm: V = I × R</h3>
+                            <div>
+                                <label class="text-xs text-slate-300 flex justify-between">
+                                    <span>Tegangan Baterai (V):</span>
+                                    <span id="circuit-voltage-val" class="font-bold text-cyan-400">9.0 Volt</span>
+                                </label>
+                                <input type="range" id="circuit-voltage-input" min="1" max="24" value="9" step="0.5" class="w-full mt-1 accent-indigo-500" oninput="updateCircuitSim()">
+                            </div>
+                            <div>
+                                <label class="text-xs text-slate-300 flex justify-between">
+                                    <span>Hambatan Resistor (R):</span>
+                                    <span id="circuit-resistor-val" class="font-bold text-cyan-400">10.0 Ohm</span>
+                                </label>
+                                <input type="range" id="circuit-resistor-input" min="1" max="50" value="10" step="1" class="w-full mt-1 accent-indigo-500" oninput="updateCircuitSim()">
+                            </div>
+                            <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+                                <span class="text-xs text-slate-300 font-semibold">Sakelar Utama:</span>
+                                <button id="circuit-switch-btn" onclick="toggleCircuitSwitch()" class="px-4 py-1.5 bg-emerald-600 text-white font-bold text-xs rounded-lg shadow">
+                                    TERHUBUNG (ON)
+                                </button>
+                            </div>
+                            <!-- Live Outputs -->
+                            <div class="p-3 bg-slate-900/80 rounded-lg text-xs space-y-1.5 font-mono border border-slate-800">
+                                <div class="flex justify-between"><span class="text-slate-400">Kuat Arus (I):</span><span id="out-circuit-current" class="text-emerald-400 font-bold">0.90 Ampere</span></div>
+                                <div class="flex justify-between"><span class="text-slate-400">Daya Lampu (P):</span><span id="out-circuit-power" class="text-amber-400 font-bold">8.10 Watt</span></div>
+                                <div class="flex justify-between"><span class="text-slate-400">Intensitas Cahaya:</span><span id="out-circuit-status" class="text-cyan-400">Terang Normal</span></div>
+                            </div>
+                        </div>
+                        <!-- Canvas View Circuit -->
+                        <div class="lg:col-span-2 relative bg-slate-950 rounded-xl overflow-hidden border border-slate-800 h-80 flex items-center justify-center">
+                            <canvas id="circuitCanvas" class="w-full h-full block"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW 4: LEADERBOARD -->
+            <section id="view-leaderboard" class="space-y-6 hidden">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-xl font-bold text-white flex items-center space-x-2">
+                            <i class="ph-bold ph-trophy text-amber-400"></i>
+                            <span>Papan Peringkat (Leaderboard)</span>
+                        </h2>
+                        <p class="text-xs text-gray-400">Kompetisi poin dan level pemain ScienceQuest</p>
+                    </div>
+                    <span class="text-xs px-3 py-1 rounded-full bg-amber-950 text-amber-300 border border-amber-800/50">Lokal & Demo</span>
+                </div>
+
+                <div class="glass-panel rounded-2xl border border-quest-border overflow-hidden">
+                    <div class="p-4 border-b border-quest-border bg-slate-900/50 flex justify-between text-xs font-bold text-gray-400 uppercase tracking-wider">
+                        <div class="w-16 text-center">Peringkat</div>
+                        <div class="flex-1">Pemain</div>
+                        <div class="w-24 text-center">Level</div>
+                        <div class="w-24 text-right">Total Poin</div>
+                    </div>
+                    <div id="leaderboard-rows" class="divide-y divide-slate-800/60">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW 5: ACHIEVEMENTS / BADGES -->
+            <section id="view-achievements" class="space-y-6 hidden">
+                <div>
+                    <h2 class="text-xl font-bold text-white flex items-center space-x-2">
+                        <i class="ph-bold ph-medal text-emerald-400"></i>
+                        <span>Lencana Pencapaian (Achievements)</span>
+                    </h2>
+                    <p class="text-xs text-gray-400">Buka lencana khusus dengan menyelesaikan tantangan sains dan kuis!</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="badges-grid">
+                    <!-- Populated by JS -->
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- MODAL 1: LESSON READER & QUIZ RUNNER -->
+    <div id="modal-lesson" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm hidden">
+        <div class="bg-quest-card border border-quest-border w-full max-w-3xl rounded-3xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            <!-- Modal Header -->
+            <div class="p-5 border-b border-quest-border flex items-center justify-between bg-slate-900/60">
+                <div class="flex items-center space-x-3">
+                    <span id="modal-lesson-category" class="px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider bg-indigo-950 text-indigo-300 border border-indigo-800/60">Kategori</span>
+                    <h3 id="modal-lesson-title" class="text-lg font-bold text-white">Judul Materi</h3>
+                </div>
+                <button onclick="closeLessonModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition">
+                    <i class="ph-bold ph-x text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Modal Content (Scrollable) -->
+            <div class="p-6 overflow-y-auto space-y-6 flex-1 text-sm text-slate-200" id="modal-lesson-body">
+                <!-- Illustrated Graphic Header -->
+                <div id="modal-lesson-illustration" class="w-full h-48 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center relative overflow-hidden">
+                    <!-- Dynamic SVG Illustration insert -->
+                </div>
+
+                <!-- Text Content -->
+                <div id="modal-lesson-text" class="space-y-4 leading-relaxed">
+                    <!-- Insert content -->
+                </div>
+
+                <!-- Interactive Quiz Trigger / Quiz Container -->
+                <div class="pt-6 border-t border-quest-border" id="quiz-section-container">
+                    <div class="flex justify-between items-center mb-4">
+                        <h4 class="text-base font-bold text-white flex items-center space-x-2">
+                            <i class="ph-bold ph-question text-cyan-400"></i>
+                            <span>Uji Pemahaman: Kuis Pilihan Ganda</span>
+                        </h4>
+                        <span id="quiz-points-badge" class="text-xs px-2.5 py-1 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 font-semibold">+20 PTS jika benar</span>
+                    </div>
+
+                    <!-- Quiz Question Box -->
+                    <div id="quiz-box" class="bg-slate-900/80 p-5 rounded-2xl border border-slate-800 space-y-4">
+                        <p id="quiz-question-text" class="font-semibold text-white text-base">Pertanyaan Kuis...</p>
+                        <div id="quiz-options-list" class="space-y-2.5">
+                            <!-- Options JS -->
+                        </div>
+
+                        <!-- Feedback Box -->
+                        <div id="quiz-feedback" class="p-4 rounded-xl hidden text-xs leading-relaxed space-y-1">
+                            <!-- Correct / Incorrect feedback -->
+                        </div>
+
+                        <button id="btn-submit-quiz" onclick="submitQuizAnswer()" class="w-full py-3 bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-bold rounded-xl text-sm transition">
+                            Jawab Pertanyaan
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-4 border-t border-quest-border bg-slate-900/40 flex justify-end">
+                <button onclick="closeLessonModal()" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl transition">
+                    Tutup Modul
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: SPEC.MD DOCUMENTATION VIEW -->
+    <div id="modal-spec" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm hidden">
+        <div class="bg-quest-card border border-quest-border w-full max-w-4xl rounded-3xl h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="p-5 border-b border-quest-border flex items-center justify-between bg-slate-900/80">
+                <div class="flex items-center space-x-2">
+                    <i class="ph-bold ph-file-text text-indigo-400 text-xl"></i>
+                    <h3 class="text-lg font-bold text-white">Dokumentasi Teknis: SPEC.md</h3>
+                </div>
+                <button onclick="closeSpecModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition">
+                    <i class="ph-bold ph-x text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1 spec-doc text-slate-300 font-sans" id="spec-doc-content">
+                <!-- SPEC.md Text renders here -->
+            </div>
+            <div class="p-4 border-t border-quest-border bg-slate-900/60 flex justify-between items-center text-xs text-slate-400">
+                <span>ScienceQuest Software Engineering Spec v1.0</span>
+                <button onclick="closeSpecModal()" class="px-4 py-2 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-500 transition">Tutup Dokumentasi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTIFICATION TOAST WRAPPER -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
+
+    <!-- APPLICATION DATA & LOGIC SCRIPT -->
+    <script>
+        /* ==========================================================================
+           1. APP DATA MODEL & DEMO DATA
+           ========================================================================== */
+
+        const SPEC_DOCUMENTATION_TEXT = `
+# SPEC.md: Spesifikasi Teknis ScienceQuest
+
+## 1. Tujuan Sistem (Purpose)
+ScienceQuest dirancang untuk memberikan pengalaman pembelajaran sains (Fisika, Kimia, Biologi, Astronomi) yang interaktif, menyenangkan, dan terstruktur bagi siswa SMP/SMA melalui mekanisme **gamifikasi** (XP, Level, Badges, Daily Challenge, Leaderboard) dan **simulasi lab langsung** pada browser.
+
+## 2. Target Pengguna (User Persona)
+- **Pelajar SMP & SMA**: Belajar mandiri atau kelompok melalui tantangan harian, materi bergambar, dan simulasi sains.
+- **Guru Pendamping**: Menggunakan media interaktif pada satu perangkat di kelas untuk peragaan konsep (misal: Hukum Gravitasi & Rangkaian Listrik).
+
+## 3. Fitur MVP (Minimum Viable Product)
+1. **Gamified Dashboard**: Progress bar per kategori, daily challenge harian lokal, XP & statistik langsung.
+2. **4 Kategori Pembelajaran**: Fisika, Kimia, Biologi, Astronomi.
+3. **12 Materi Pembelajaran**: Teks ringkas dengan konteks Indonesia & diagram visual SVG.
+4. **Kuis Interaktif (20 Soal)**: Pilihan ganda, skor instan, penjelasan ilmiah, serta proteksi anti-exploit poin berulang.
+5. **Laboratorium Simulasi Canvas/SVG**:
+   - *Fisika*: Gravitasi & Jatuh Bebas (kontrol g, tinggi, massa).
+   - *Astronomi*: Simulas Orbit Tata Surya (Hukum Kepler).
+   - *Fisika/Elektronika*: Rangkaian Listrik Seri (Hukum Ohm V=I×R).
+6. **Sistem Gamifikasi**: XP, Leveling, Badge Unlocks, Confetti Animation.
+7. **Papan Peringkat (Leaderboard Lokal)**: Terupdate secara real-time dengan profil demo.
+8. **Persistensi Progress**: Menyimpan profil, kuis selesai, dan badge via \`localStorage\`.
+
+## 4. Data Model Structure
+- **Materi**: \`{ id, judul, kategori, deskripsi, konten, tingkatKesulitan, svgType }\`
+- **Kuis**: \`{ id, materiId, pertanyaan, pilihanJawaban, jawabanBenar, penjelasan, poin }\`
+- **Pemain (State)**: \`{ namaAlias, xp, level, totalPoin, materiSelesai: [], kuisSelesai: [], badges: [], dailyClaimedDate }\`
+- **Achievement**: \`{ id, nama, deskripsi, icon, syaratPencapaian }\`
+
+## 5. Kriteria Penerimaan (Acceptance Criteria)
+- [x] Kuis memberikan feedback jawaban benar/salah & penjelasan yang tepat.
+- [x] Poin & XP kuis *hanya diberikan 1x* per materi untuk mencegah pembagian poin berulang (anti-farming).
+- [x] Simulasi Gravitasi menghitung waktu jatuh $t = \\sqrt{2h/g}$ dan kecepatan $v = gt$ secara presisi.
+- [x] Simulasi Rangkaian Listrik menghitung arus $I = V/R$ dan menyesuaikan kecerahan lampu Canvas secara real-time.
+- [x] Data tetap tersimpan secara utuh saat halaman dimuat ulang (Refresh browser).
+- [x] Fitur Reset Progres menghapus data \`localStorage\` secara aman dan mengembalikan state ke default.
+
+## 6. Implementation Plan & Iterations
+- **Iterasi 1**: Penyusunan data model, layout responsive Tailwind UI, dan state engine.
+- **Iterasi 2**: Integrasi materi sains bergambar & sistem kuis interaktif anti-exploit.
+- **Iterasi 3**: Pengembangan 3 modul simulasi Canvas (Gravitasi, Solar System, Rangkaian Listrik).
+- **Iterasi 4**: Implementasi Daily Challenge harian, Leaderboard, Badging System, & LocalStorage persistence.
+`;
+
+        // CATEGORIES DEFINITION
+        const CATEGORIES = [
+            { id: 'fisika', name: 'Fisika', icon: 'ph-atom', color: 'indigo', desc: 'Gaya, Energi, Gravitasi, dan Rangkaian Listrik' },
+            { id: 'kimia', name: 'Kimia', icon: 'ph-flask', color: 'cyan', desc: 'Struktur Atom, Reaksi Kimia, dan Tabel Periodik' },
+            { id: 'biologi', name: 'Biologi', icon: 'ph-dna', color: 'emerald', desc: 'Sel, Ekosistem, Fotosintesis, dan Genetika' },
+            { id: 'astronomi', name: 'Astronomi', icon: 'ph-planet', color: 'purple', desc: 'Tata Surya, Bintang, Gravitasi Orbit, dan Galaksi' }
+        ];
+
+        // 12 LESSONS (3 PER CATEGORY) + INTEGRATED QUIZZES (TOTAL 20 QUESTIONS)
+        const LESSONS = [
+            // FISIKA
+            {
+                id: 'fis-1',
+                kategori: 'fisika',
+                judul: 'Hukum Gravitasi & Jatuh Bebas',
+                tingkatKesulitan: 'Pemula',
+                deskripsi: 'Pelajari bagaimana gaya tarik bumi mempengaruhi gerak benda jatuh di sekitar kita.',
+                konten: `
+                    <p><b>Gerak Jatuh Bebas (GJB)</b> adalah gerak lurus berubah beraturan (GLBB) di mana suatu benda jatuh dari ketinggian tertentu tanpa kecepatan awal ($v_0 = 0$) dan hanya dipengaruhi oleh percepatan gravitasi ($g$).</p>
+                    <p class="mt-2"><b>Di Indonesia (Wilayah Khatulistiwa):</b> Nilai percepatan gravitasi rata-rata di permukaan bumi adalah sekitar $9.8\\text{ m/s}^2$. Di kawasan Khatulistiwa seperti Sumatra dan Kalimantan, gaya sentrifugal rotasi bumi membuat nilai $g$ sedikit lebih kecil dibandingkan di kawasan kutub.</p>
+                    <p class="mt-2"><b>Rumus Utama:</b></p>
+                    <ul class="list-disc ml-5 space-y-1 mt-1">
+                        <li>Kecepatan saat waktu $t$: $v = g \\cdot t$</li>
+                        <li>Ketinggian/Jarak tempuh: $h = \\frac{1}{2} g t^2$</li>
+                        <li>Waktu tempuh hingga tanah: $t = \\sqrt{\\frac{2h}{g}}$</li>
+                    </ul>
+                `,
+                svgType: 'gravity',
+                quizzes: [
+                    {
+                        id: 'q-fis-1a',
+                        pertanyaan: 'Jika sebuah kelapa jatuh dari pohon di Riau tanpa kecepatan awal dan membutuhkan waktu 2 detik untuk menyentuh tanah ($g = 9.8\\text{ m/s}^2$), berapakah tinggi pohon tersebut?',
+                        pilihan: ['9.8 meter', '19.6 meter', '39.2 meter', '4.9 meter'],
+                        jawabanBenar: 1, // 19.6m
+                        penjelasan: 'Menggunakan rumus $h = \\frac{1}{2} g t^2 = \\frac{1}{2} \\times 9.8 \\times (2^2) = 4.9 \\times 4 = 19.6\\text{ meter}$.',
+                        poin: 25
+                    },
+                    {
+                        id: 'q-fis-1b',
+                        pertanyaan: 'Apakah massa benda mempengaruhi kecepatan jatuh benda dalam ruang hampa udara?',
+                        pilihan: ['Ya, benda lebih berat selalu jatuh lebih cepat', 'Tidak, semua benda jatuh dengan percepatan sama', 'Ya, tetapi tergantung bentuk benda', 'Hanya berpengaruh jika ada angin'],
+                        jawabanBenar: 1,
+                        penjelasan: 'Dalam ruang hampa (tanpa gesekan udara), percepatan gravitasi $g$ bekerja sama pada semua benda tanpa memedulikan massanya.',
+                        poin: 20
+                    }
+                ]
+            },
+            {
+                id: 'fis-2',
+                kategori: 'fisika',
+                judul: 'Hukum Ohm & Rangkaian Listrik Seri',
+                tingkatKesulitan: 'Menengah',
+                deskripsi: 'Memahami hubungan antara Tegangan (V), Arus (I), dan Hambatan (R) dalam aliran listrik.',
+                konten: `
+                    <p><b>Hukum Ohm</b> menyatakan bahwa arus listrik ($I$) yang mengalir melalui suatu penghantar berbanding lurus dengan beda potensial/tegangan ($V$) dan berbanding terbalik dengan hambatan ($R$).</p>
+                    <p class="mt-2 font-mono bg-slate-900 p-2 rounded border border-slate-800 text-cyan-400">Rumus: V = I × R  atau  I = V / R</p>
+                    <p class="mt-2">Dalam <b>Rangkaian Seri</b>, arus listrik ($I$) yang mengalir pada setiap komponen adalah sama besar, sedangkan tegangan total merupakan penjumlahan dari tegangan tiap komponen ($V_{total} = V_1 + V_2$). Jika satu lampu terputus, seluruh aliran akan terhenti.</p>
+                `,
+                svgType: 'circuit',
+                quizzes: [
+                    {
+                        id: 'q-fis-2a',
+                        pertanyaan: 'Sebuah baterai 12 Volt dihubungkan dengan lampu berhambatan 4 Ohm. Berapakah kuat arus listrik yang mengalir?',
+                        pilihan: ['3 Ampere', '48 Ampere', '0.33 Ampere', '8 Ampere'],
+                        jawabanBenar: 0, // 3A
+                        penjelasan: 'Sesuai Hukum Ohm: $I = \\frac{V}{R} = \\frac{12}{4} = 3\\text{ Ampere}$.',
+                        poin: 25
+                    },
+                    {
+                        id: 'q-fis-2b',
+                        pertanyaan: 'Apa yang terjadi pada total hambatan ($R$) jika dua resistor dihubung secara seri?',
+                        pilihan: ['Hambatan total menjadi lebih kecil', 'Hambatan total merupakan penjumlahan keduanya ($R_1 + R_2$)', 'Hambatan total menjadi nol', 'Hambatan total menjadi separuhnya'],
+                        jawabanBenar: 1,
+                        penjelasan: 'Pada rangkaian seri, hambatan total ($R_{total}$) adalah penjumlahan dari seluruh resistor dalam jalur tersebut ($R_1 + R_2 + ...$).',
+                        poin: 20
+                    }
+                ]
+            },
+            {
+                id: 'fis-3',
+                kategori: 'fisika',
+                judul: 'Hukum Termodinamika & Kalor',
+                tingkatKesulitan: 'Lanjutan',
+                deskripsi: 'Konsep perpindahan energi panas dan perubahan wujud zat dalam kehidupan sehari-hari.',
+                konten: `
+                    <p><b>Kalor ($Q$)</b> adalah bentuk energi yang berpindah dari benda bersuhu lebih tinggi ke benda bersuhu lebih rendah. Jumlah kalor untuk menaikkan suhu zat bergantung pada massa ($m$), kalor jenis ($c$), dan perubahan suhu ($\\Delta T$).</p>
+                    <p class="mt-2 font-mono bg-slate-900 p-2 rounded border border-slate-800 text-emerald-400">Rumus Kalor: Q = m · c · ΔT</p>
+                    <p class="mt-2">Asas Black menyatakan bahwa dalam sistem tertutup, kalor yang dilepas oleh benda bersuhu tinggi sama dengan kalor yang diterima oleh benda bersuhu rendah ($Q_{lepas} = Q_{terima}$).</p>
+                `,
+                svgType: 'thermo',
+                quizzes: [
+                    {
+                        id: 'q-fis-3a',
+                        pertanyaan: 'Air sebanyak 1 kg ($c = 4200\\text{ J/kg}^\\circ\\text{C}$) dipanaskan dari $25^\\circ\\text{C}$ hingga $75^\\circ\\text{C}$. Berapa kalor yang dibutuhkan?',
+                        pilihan: ['210.000 Joule', '105.000 Joule', '420.000 Joule', '315.000 Joule'],
+                        jawabanBenar: 0,
+                        penjelasan: '$Q = m \\cdot c \\cdot \\Delta T = 1 \\times 4200 \\times (75 - 25) = 4200 \\times 50 = 210.000\\text{ Joule}$.',
+                        poin: 25
+                    }
+                ]
+            },
+
+            // KIMIA
+            {
+                id: 'kim-1',
+                kategori: 'kimia',
+                judul: 'Struktur Atom & Tabel Periodik',
+                tingkatKesulitan: 'Pemula',
+                deskripsi: 'Mengenal partikel subatomik (Proton, Neutron, Elektron) dan tata letak unsur.',
+                konten: `
+                    <p>Atom terdiri dari inti atom yang memuat <b>Proton</b> (bermuatan positif) dan <b>Neutron</b> (netral), serta dikelilingi oleh <b>Elektron</b> (bermuatan negatif) pada kulit-kulit atom.</p>
+                    <p class="mt-2"><b>Nomor Atom ($Z$)</b> menunjukkan jumlah proton dalam inti atom. Pada atom netral, jumlah elektron sama dengan jumlah proton. <b>Nomor Massa ($A$)</b> menunjukkan total proton + neutron.</p>
+                `,
+                svgType: 'atom',
+                quizzes: [
+                    {
+                        id: 'q-kim-1a',
+                        pertanyaan: 'Atom Natrium (Na) memiliki nomor atom 11 dan nomor massa 23. Berapakah jumlah neutron dalam atom Natrium?',
+                        pilihan: ['11', '12', '23', '34'],
+                        jawabanBenar: 1, // 23-11=12
+                        penjelasan: 'Jumlah Neutron = Nomor Massa ($A$) - Nomor Atom ($Z$) = $23 - 11 = 12$.',
+                        poin: 25
+                    },
+                    {
+                        id: 'q-kim-1b',
+                        pertanyaan: 'Partikel subatomik mana yang mengelilingi inti atom pada tingkat energi tertentu?',
+                        pilihan: ['Proton', 'Neutron', 'Elektron', 'Positron'],
+                        jawabanBenar: 2,
+                        penjelasan: 'Elektron mengelilingi inti atom pada kulit-kulit elektron dengan tingkat energi konstan.',
+                        poin: 20
+                    }
+                ]
+            },
+            {
+                id: 'kim-2',
+                kategori: 'kimia',
+                judul: 'Skala pH, Asam, dan Basa',
+                tingkatKesulitan: 'Menengah',
+                deskripsi: 'Karakteristik larutan asam dan basa dalam produk sehari-hari seperti jeruk dan sabun.',
+                konten: `
+                    <p>Skala **pH (Potential of Hydrogen)** berkisar dari 0 hingga 14:</p>
+                    <ul class="list-disc ml-5 space-y-1 mt-1">
+                        <li><b>pH &lt; 7:</b> Larutan Asam (menghasilkan ion $H^+$). Contoh: Air perasan jeruk nipis (pH ~2).</li>
+                        <li><b>pH = 7:</b> Larutan Netral. Contoh: Air murni murni.</li>
+                        <li><b>pH &gt; 7:</b> Larutan Basa (menghasilkan ion $OH^-$). Contoh: Air sabun & detergen (pH ~10-12).</li>
+                    </ul>
+                `,
+                svgType: 'phscale',
+                quizzes: [
+                    {
+                        id: 'q-kim-2a',
+                        pertanyaan: 'Kertas lakmus biru dicelupkan ke dalam larutan asam jawa. Warna kertas lakmus akan berubah menjadi...',
+                        pilihan: ['Biru Tua', 'Merah', 'Hijau', 'Kuning'],
+                        jawabanBenar: 1,
+                        penjelasan: 'Larutan Asam mengubah warna kertas lakmus biru menjadi merah.',
+                        poin: 25
+                    },
+                    {
+                        id: 'q-kim-2b',
+                        pertanyaan: 'Berapakah nilai pH untuk air murni pada suhu kamar ($25^\\circ\\text{C}$)?',
+                        pilihan: ['pH 0', 'pH 7', 'pH 14', 'pH 1'],
+                        jawabanBenar: 1,
+                        penjelasan: 'Air murni bersifat netral dengan nilai pH tepat 7.',
+                        poin: 20
+                    }
+                ]
+            },
+            {
+                id: 'kim-3',
+                kategori: 'kimia',
+                judul: 'Reaksi Redoks & Pengkaratan Logam',
+                tingkatKesulitan: 'Lanjutan',
+                deskripsi: 'Reaksi Oksidasi dan Reduksi dalam kehidupan seperti korosi jembatan baja.',
+                konten: `
+                    <p><b>Reaksi Redoks</b> adalah gabungan dari dua reaksi: <b>Oksidasi</b> (pelepasan elektron / pengikatan oksigen) dan <b>Reduksi</b> (penangkapan elektron / pelepasan oksigen).</p>
+                    <p class="mt-2"><b>Pengkaratan Besi ($Fe$):</b> Oksidasi besi oleh gas Oksigen ($O_2$) dengan bantuan kelembapan air ($H_2O$) membentuk besi(III) oksida terhidrasi ($Fe_2O_3 \\cdot nH_2O$).</p>
+                `,
+                svgType: 'redox',
+                quizzes: [
+                    {
+                        id: 'q-kim-3a',
+                        pertanyaan: 'Pada reaksi pengkaratan besi, peristiwa apa yang dialami oleh atom Besi (Fe)?',
+                        pilihan: ['Reduksi (Menangkap elektron)', 'Oksidasi (Melepas elektron & mengikat oksigen)', 'Netralisasi', 'Sublimasi'],
+                        jawabanBenar: 1,
+                        penjelasan: 'Besi mengalamai oksidasi dari biloks 0 menjadi +3 saat bereaksi dengan oksigen.',
+                        poin: 25
+                    }
+                ]
+            },
+
+            // BIOLOGI
+            {
+                id: 'bio-1',
+                kategori: 'biologi',
+                judul: 'Struktur Sel Tumbuhan & Hewan',
+                tingkatKesulitan: 'Pemula',
+                deskripsi: 'Unit terkecil kehidupan: Membran sel, Dinding sel, Kloroplas, dan Mitokondria.',
+                konten: `
+                    <p>Sel adalah unit struktural dan fungsional terkecil dari makhluk hidup. Perbedaan utama sel tumbuhan dan hewan:</p>
+                    <ul class="list-disc ml-5 space-y-1 mt-1">
+                        <li><b>Sel Tumbuhan:</b> Memiliki <i>Dinding Sel</i> (kaku dari selulosa) dan <i>Kloroplas</i> (tempat fotosintesis).</li>
+                        <li><b>Sel Hewan:</b> Tidak memiliki dinding sel kaku, namun memiliki <i>Sentriol</i> untuk pembelahan sel.</li>
+                    </ul>
+                    <p class="mt-2"><b>Mitokondria</b> berfungsi sebagai 'pabrik energi' (respirasi selular) pada kedua sel.</p>
+                `,
+                svgType: 'cell',
+                quizzes: [
+                    {
+                        id: 'q-bio-1a',
+                        pertanyaan: 'Organel sel tumbuhan yang mengandung pigmen klorofil dan berfungsi menangkap cahaya matahari adalah...',
+                        pilihan: ['Mitokondria', 'Kloroplas', 'Ribosom', 'Badan Golgi'],
+                        jawabanBenar: 1,
+                        penjelasan: 'Kloroplas mengandung klorofil untuk melangsungkan proses fotosintesis.',
+                        poin: 25
+                    },
+                    {
+                        id: 'q-bio-1b',
+                        pertanyaan: 'Mengapa batang tumbuhan berpembuluh terasa lebih kaku dibandingkan jaringan hewan?',
+                        pilihan: ['Karena memiliki membran sel tebal', 'Karena sel tumbuhan memiliki Dinding Sel dari selulosa', 'Karena mengandung banyak air', 'Karena tumbuhan tidak memiliki pembuluh darah'],
+                        jawabanBenar: 1,
+                        penjelasan: 'Dinding sel yang kaku dan tersusun dari selulosa memberikan struktur kokoh pada tumbuhan.',
+                        poin: 20
+                    }
+                ]
+            },
+            {
+                id: 'bio-2',
+                kategori: 'biologi',
+                judul: 'Fotosintesis & Ekosistem Hutan Tropis',
+                tingkatKesulitan: 'Menengah',
+                deskripsi: 'Bagaimana hutan hujan tropis Indonesia menghasilkan oksigen bagi bumi.',
+                konten: `
+                    <p><b>Fotosintesis</b> adalah proses pembentukan karbohidrat ($C_6H_{12}O_6$) dari Karbon Dioksida ($CO_2$) dan Air ($H_2O$) dengan bantuan energi cahaya matahari dan klorofil.</p>
+                    <p class="mt-2 font-mono bg-slate-900 p-2 rounded border border-slate-800 text-emerald-300">Reaksi: 6CO₂ + 6H₂O + Cahaya → C₆H₁₂O₆ + 6O₂</p>
+                    <p class="mt-2">Hutan hujan tropis di Kalimantan dan Papua merupakan paru-paru dunia yang menyerap emisi karbon bumi secara signifikan.</p>
+                `,
+                svgType: 'photosynthesis',
+                quizzes: [
+                    {
+                        id: 'q-bio-2a',
+                        pertanyaan: 'Gas apakah yang dihasilkan oleh tumbuhan sebagai produk sampingan dari proses fotosintesis?',
+                        pilihan: ['Karbon Dioksida (CO₂)', 'Oksigen (O₂)', 'Nitrogen (N₂)', 'Metana (CH₄)'],
+                        jawabanBenar: 1,
+                        penjelasan: 'Proses fotosintesis menghasilkan glukosa dan melepaskan gas Oksigen ($O_2$) ke udara.',
+                        poin: 25
+                    },
+                    {
+                        id: 'q-bio-2b',
+                        pertanyaan: 'Di manakah reaksi terang fotosintesis terjadi dalam kloroplas?',
+                        pilihan: ['Stroma', 'Membran Tilakoid', 'Matriks Mitokondria', 'Inti Sel'],
+                        jawabanBenar: 1,
+                        penjelasan: 'Reaksi terang penangkapan foton cahaya terjadi pada membran tilakoid (grana).',
+                        poin: 20
+                    }
+                ]
+            },
+            {
+                id: 'bio-3',
+                kategori: 'biologi',
+                judul: 'Sistem Peredaran Darah Manusia',
+                tingkatKesulitan: 'Lanjutan',
+                deskripsi: 'Jantung, pembuluh darah vena/arteri, dan transportasi sel darah merah.',
+                konten: `
+                    <p>Sistem peredaran darah manusia adalah <b>sistem tertutup dan ganda</b>. Jantung manusia terdiri dari 4 ruang: Atrium Kiri & Kanan, serta Ventrikel Kiri & Kanan.</p>
+                    <p class="mt-2"><b>Arteri (Pembuluh Nadi):</b> Membawa darah kaya $O_2$ keluar dari jantung ke seluruh tubuh (kecuali arteri pulmonalis).</p>
+                    <p class="mt-1"><b>Vena (Pembuluh Balik):</b> Membawa darah kaya $CO_2$ kembali menuju jantung.</p>
+                `,
+                svgType: 'heart',
+                quizzes: [
+                    {
+                        id: 'q-bio-3a',
+                        pertanyaan: 'Ruang jantung manakah yang memompa darah kaya oksigen ke seluruh tubuh melalui pembuluh aorta?',
+                        pilihan: ['Atrium Kanan', 'Ventrikel Kanan', 'Ventrikel Kiri', 'Atrium Kiri'],
+                        jawabanBenar: 2,
+                        penjelasan: 'Ventrikel (Bilik) Kiri memiliki otot paling tebal untuk memompa darah kaya O₂ ke seluruh tubuh.',
+                        poin: 25
+                    }
+                ]
+            },
+
+            // ASTRONOMI
+            {
+                id: 'ast-1',
+                kategori: 'astronomi',
+                judul: 'Sistem Tata Surya & Gerak Orbit',
+                tingkatKesulitan: 'Pemula',
+                deskripsi: 'Urutan 8 planet dan hukum kepler yang mengatur lintasan elips planet.',
+                konten: `
+                    <p>Tata Surya kita terdiri dari Matahari sebagai pusat gravitasional dan 8 planet utama: Merkurius, Venus, Bumi, Mars, Yupiter, Saturnus, Uranus, dan Neptunus.</p>
+                    <p class="mt-2"><b>Hukum I Kepler:</b> Lintasan orbit planet mengelilingi matahari berbentuk <i>elips</i> dengan matahari berada pada salah satu titik fokusnya.</p>
+                `,
+                svgType: 'solar',
+                quizzes: [
+                    {
+                        id: 'q-ast-1a',
+                        pertanyaan: 'Manakah planet terbesar di Tata Surya yang tergolong dalam planet raksasa gas (Gas Giant)?',
+                        pilihan: ['Mars', 'Saturnus', 'Yupiter', 'Neptunus'],
+                        jawabanBenar: 2,
+                        penjelasan: 'Yupiter adalah planet terbesar di Tata Surya dengan diameter ~11 kali diameter Bumi.',
+                        poin: 25
+                    },
+                    {
+                        id: 'q-ast-1b',
+                        pertanyaan: 'Planet manakah yang memiliki waktu revolusi (mengelilingi matahari) paling singkat?',
+                        pilihan: ['Bumi', 'Merkurius', 'Venus', 'Mars'],
+                        jawabanBenar: 1,
+                        penjelasan: 'Merkurius berada paling dekat dengan Matahari, sehingga memiliki lintasan dan waktu revolusi paling singkat (~88 hari bumi).',
+                        poin: 20
+                    }
+                ]
+            },
+            {
+                id: 'ast-2',
+                kategori: 'astronomi',
+                judul: 'Fase Bulan & Gerhana (Eclipse)',
+                tingkatKesulitan: 'Menengah',
+                deskripsi: 'Bagaimana posisi Matahari, Bumi, dan Bulan menciptakan gerhana dan pasang surut air laut.',
+                konten: `
+                    <p>Bulan mengorbit Bumi dalam waktu ~29.5 hari (bulan sinodis). Posisi relatif Bulan terhadap Bumi dan Matahari menyebabkan penampakan <b>Fase Bulan</b> (Bulan Baru, Sabit, Separuh, Cembung, Purnama).</p>
+                    <p class="mt-2"><b>Gerhana Matahari:</b> Terjadi ketika posisi Bulan berada tepat di antara Matahari dan Bumi (Matahari - Bulan - Bumi).</p>
+                    <p class="mt-1"><b>Gerhana Bulan:</b> Terjadi ketika posisi Bumi berada tepat di antara Matahari dan Bulan (Matahari - Bumi - Bulan).</p>
+                `,
+                svgType: 'eclipse',
+                quizzes: [
+                    {
+                        id: 'q-ast-2a',
+                        pertanyaan: 'Pada gerhana matahari total, bagian Bumi terkena bayangan inti Bulan yang gelap yang disebut...',
+                        pilihan: ['Penumbra', 'Umbra', 'Corona', 'Chromosphere'],
+                        jawabanBenar: 1,
+                        penjelasan: 'Bayangan inti yang sangat gelap dan sempit dinamakan Umbra. Wilayah yang terkena Umbra mengalami gerhana total.',
+                        poin: 25
+                    },
+                    {
+                        id: 'q-ast-2b',
+                        pertanyaan: 'Fase Bulan manakah yang menyebabkan terjadinya pasang air laut tertinggi (Pasang Purnama)?',
+                        pilihan: ['Bulan Sabit & Seperempat', 'Bulan Baru & Bulan Purnama', 'Bulan Cembung saja', 'Fase Bulan Kuaral'],
+                        jawabanBenar: 1,
+                        penjelasan: 'Saat Bulan Baru dan Bulan Purnama, gaya gravitasi Matahari dan Bulan sejajar sehingga menghasilkan pasang maksimum.',
+                        poin: 20
+                    }
+                ]
+            },
+            {
+                id: 'ast-3',
+                kategori: 'astronomi',
+                judul: 'Evolusi Bintang & Lubang Hitam (Black Hole)',
+                tingkatKesulitan: 'Lanjutan',
+                deskripsi: 'Siklus hidup bintang dari Nebula hingga peristiwa Supernova.',
+                konten: `
+                    <p>Bintang lahir dari awan gas dan debu antarbintang yang disebut <b>Nebula</b>. Energi bintang dihasilkan oleh reaksi <b>Fusi Nuklir</b> hidrogen menjadi helium di intinya.</p>
+                    <p class="mt-2">Bintang bermassa sangat besar akan mengakhiri hidupnya dalam ledakan dahsyat yang disebut <b>Supernova</b>, meninggalkan sisa berupa Bintang Neutron atau <b>Lubang Hitam (Black Hole)</b> dengan kerapatan sangat masif.</p>
+                `,
+                svgType: 'star',
+                quizzes: [
+                    {
+                        id: 'q-ast-3a',
+                        pertanyaan: 'Reaksi nuklir apakah yang memancarkan energi dahsyat pada inti Matahari dan bintang-bintang?',
+                        pilihan: ['Fisi Nuklir (Pembelahan)', 'Fusi Nuklir (Penggabungan inti Hidrogen)', 'Pembakaran Oksigen', 'Peluruhan Radioaktif Alpha'],
+                        jawabanBenar: 1,
+                        penjelasan: 'Fusi Nuklir menggabungkan 4 inti Hidrogen menjadi 1 inti Helium, melepaskan energi panas & cahaya sangat tinggi.',
+                        poin: 25
+                    }
+                ]
+            }
+        ];
+
+        // DEMO LEADERBOARD PROFILES
+        const DEMO_LEADERBOARD = [
+            { name: 'Ayu Kartika', level: 5, xp: 480, totalPoin: 380, title: 'Master Fisika' },
+            { name: 'Budi Santoso', level: 4, xp: 350, totalPoin: 290, title: 'Penjelajah Galaksi' },
+            { name: 'Citra Dewi', level: 3, xp: 280, totalPoin: 220, title: 'Pakar Kimia' },
+            { name: 'Doni Pratama', level: 3, xp: 210, totalPoin: 175, title: 'Pengamat Biologi' },
+            { name: 'Eka Wijaya', level: 2, xp: 140, totalPoin: 110, title: 'Siswa Rajin' }
+        ];
+
+        // BADGES LIST
+        const ACHIEVEMENTS = [
+            { id: 'b-first-quiz', nama: 'Langkah Pertama', deskripsi: 'Selesaikan 1 kuis pertama Anda', icon: 'ph-footprints', syarat: 'Selesaikan 1 kuis' },
+            { id: 'b-physics-master', nama: 'Ahli Fisika', deskripsi: 'Selesaikan seluruh 3 modul Fisika', icon: 'ph-atom', syarat: 'Selesaikan 3 modul Fisika' },
+            { id: 'b-chem-master', nama: 'Alkemis Kimia', deskripsi: 'Selesaikan seluruh 3 modul Kimia', icon: 'ph-flask', syarat: 'Selesaikan 3 modul Kimia' },
+            { id: 'b-bio-master', nama: 'Bio Explorer', deskripsi: 'Selesaikan seluruh 3 modul Biologi', icon: 'ph-dna', syarat: 'Selesaikan 3 modul Biologi' },
+            { id: 'b-astro-master', nama: 'Penjelajah Antariksa', deskripsi: 'Selesaikan seluruh 3 modul Astronomi', icon: 'ph-planet', syarat: 'Selesaikan 3 modul Astronomi' },
+            { id: 'b-score-100', nama: 'Cendekia Sains', deskripsi: 'Kumpulkan total minimal 200 Poin', icon: 'ph-crown', syarat: 'Kumpulkan 200 PTS' }
+        ];
+
+        /* ==========================================================================
+           2. APP STATE MANAGEMENT & LOCAL STORAGE PERSISTENCE
+           ========================================================================== */
+
+        const DEFAULT_STATE = {
+            namaAlias: 'Pelajar ScienceQuest',
+            xp: 0,
+            level: 1,
+            totalPoin: 0,
+            materiSelesai: [], // array of lesson IDs
+            kuisSelesai: [],   // array of quiz IDs (Anti-Exploit)
+            badges: [],        // array of badge IDs
+            dailyClaimedDate: '' // 'YYYY-MM-DD'
+        };
+
+        let state = { ...DEFAULT_STATE };
+        let activeCategoryFilter = 'all';
+        let currentActiveLesson = null;
+        let selectedQuizOption = null;
+
+        // Load State from LocalStorage
+        function loadState() {
+            try {
+                const saved = localStorage.getItem('sciencequest_user_state');
+                if (saved) {
+                    state = Object.assign({}, DEFAULT_STATE, JSON.parse(saved));
+                }
+            } catch (e) {
+                console.error('Error loading state from localStorage:', e);
+            }
+        }
+
+        // Save State to LocalStorage
+        function saveState() {
+            try {
+                localStorage.setItem('sciencequest_user_state', JSON.stringify(state));
+                updateUI();
+            } catch (e) {
+                console.error('Error saving state to localStorage:', e);
+            }
+        }
+
+        // Reset All Progress
+        function confirmResetProgress() {
+            if (confirm('Apakah Anda yakin ingin menghapus seluruh progres pembelajaran, poin, dan badge? Tindakan ini tidak dapat dibatalkan.')) {
+                localStorage.removeItem('sciencequest_user_state');
+                state = { ...DEFAULT_STATE };
+                saveState();
+                showToast('Progres berhasil direset ke awal!', 'info');
+            }
+        }
+
+        // Add XP and Points + Handle Level Ups
+        function addRewards(xpGained, pointsGained) {
+            state.xp += xpGained;
+            state.totalPoin += pointsGained;
+
+            // Check level up (Every 100 XP = 1 Level)
+            const newLevel = Math.floor(state.xp / 100) + 1;
+            if (newLevel > state.level) {
+                state.level = newLevel;
+                triggerConfetti();
+                showToast(`🎉 Selamat! Anda Naik Ke LEVEL ${state.level}!`, 'success');
+            }
+
+            checkBadges();
+            saveState();
+        }
+
+        // Badge Checker System
+        function checkBadges() {
+            let unlockedAny = false;
+
+            ACHIEVEMENTS.forEach(badge => {
+                if (state.badges.includes(badge.id)) return;
+
+                let unlock = false;
+                if (badge.id === 'b-first-quiz' && state.kuisSelesai.length >= 1) unlock = true;
+                if (badge.id === 'b-physics-master' && countCompletedCategory('fisika') >= 3) unlock = true;
+                if (badge.id === 'b-chem-master' && countCompletedCategory('kimia') >= 3) unlock = true;
+                if (badge.id === 'b-bio-master' && countCompletedCategory('biologi') >= 3) unlock = true;
+                if (badge.id === 'b-astro-master' && countCompletedCategory('astronomi') >= 3) unlock = true;
+                if (badge.id === 'b-score-100' && state.totalPoin >= 200) unlock = true;
+
+                if (unlock) {
+                    state.badges.push(badge.id);
+                    unlockedAny = true;
+                    showToast(`🏅 Lencana Baru Terbuka: ${badge.nama}!`, 'success');
+                }
+            });
+
+            if (unlockedAny) triggerConfetti();
+        }
+
+        function countCompletedCategory(catId) {
+            return LESSONS.filter(l => l.kategori === catId && state.materiSelesai.includes(l.id)).length;
+        }
+
+        /* ==========================================================================
+           3. UI RENDER ENGINE & NAVIGATION
+           ========================================================================== */
+
+        function navigateTo(viewId) {
+            // Hide all views
+            ['dashboard', 'learn', 'simulations', 'leaderboard', 'achievements'].forEach(v => {
+                const el = document.getElementById(`view-${v}`);
+                if (el) el.classList.add('hidden');
+                
+                const btn = document.getElementById(`nav-btn-${v}`);
+                if (btn) {
+                    btn.classList.remove('bg-indigo-600/30', 'border-indigo-500/40', 'text-white');
+                    btn.classList.add('text-slate-300');
+                }
+            });
+
+            // Show active view
+            const targetView = document.getElementById(`view-${viewId}`);
+            if (targetView) targetView.classList.remove('hidden');
+
+            const targetBtn = document.getElementById(`nav-btn-${viewId}`);
+            if (targetBtn) {
+                targetBtn.classList.add('bg-indigo-600/30', 'border-indigo-500/40', 'text-white');
+                targetBtn.classList.remove('text-slate-300');
+            }
+
+            // Canvas Redraw Triggers on Tab View
+            if (viewId === 'simulations') {
+                setTimeout(() => {
+                    initGravityCanvas();
+                    initSolarCanvas();
+                    initCircuitCanvas();
+                }, 100);
+            }
+        }
+
+        function updateUI() {
+            // Top Bar Stats
+            document.getElementById('nav-level-val').textContent = `Lv. ${state.level}`;
+            document.getElementById('nav-points-val').textContent = state.totalPoin;
+            
+            const currentLevelXP = state.xp % 100;
+            document.getElementById('nav-xp-text').textContent = `${currentLevelXP}/100`;
+            document.getElementById('nav-xp-bar').style.width = `${currentLevelXP}%`;
+
+            // Profile Side Card
+            document.getElementById('hero-user-name').textContent = state.namaAlias;
+            document.getElementById('user-profile-alias').textContent = state.namaAlias;
+            document.getElementById('sidebar-lessons-done').textContent = `${state.materiSelesai.length} / ${LESSONS.length}`;
+            document.getElementById('sidebar-badges-count').textContent = `${state.badges.length} / ${ACHIEVEMENTS.length}`;
+
+            // Overview Stats Cards
+            document.getElementById('stat-completed-lessons').textContent = `${state.materiSelesai.length} / ${LESSONS.length}`;
+            document.getElementById('stat-completed-quizzes').textContent = `${state.kuisSelesai.length} / 20`;
+            document.getElementById('stat-badges-unlocked').textContent = `${state.badges.length} / ${ACHIEVEMENTS.length}`;
+            
+            const accuracy = state.kuisSelesai.length > 0 ? Math.round((state.kuisSelesai.length / 20) * 100) : 0;
+            document.getElementById('stat-accuracy').textContent = `${accuracy}%`;
+
+            // Render Grids
+            renderCategoriesGrid();
+            renderCategoryFilterPills();
+            renderLessonsGrid();
+            renderLeaderboard();
+            renderBadgesGrid();
+            updateDailyChallengeUI();
+        }
+
+        // Render Dashboard Category Cards
+        function renderCategoriesGrid() {
+            const container = document.getElementById('categories-grid');
+            if (!container) return;
+
+            container.innerHTML = CATEGORIES.map(cat => {
+                const totalInCat = LESSONS.filter(l => l.kategori === cat.id).length;
+                const completedInCat = LESSONS.filter(l => l.kategori === cat.id && state.materiSelesai.includes(l.id)).length;
+                const percent = Math.round((completedInCat / totalInCat) * 100);
+
+                return `
+                    <div class="glass-card p-5 rounded-2xl border border-quest-border flex flex-col justify-between cursor-pointer" onclick="filterAndNavigateCategory('${cat.id}')">
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="w-10 h-10 rounded-xl bg-${cat.color}-500/20 text-${cat.color}-400 flex items-center justify-center text-xl">
+                                    <i class="ph-bold ${cat.icon}"></i>
+                                </div>
+                                <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-slate-800 text-slate-300">${completedInCat}/${totalInCat} Modul</span>
+                            </div>
+                            <h3 class="font-bold text-white text-base">${cat.name}</h3>
+                            <p class="text-xs text-slate-400 mt-1">${cat.desc}</p>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-slate-800/60">
+                            <div class="flex justify-between text-xs mb-1">
+                                <span class="text-slate-400">Kemajuan Kategori</span>
+                                <span class="text-${cat.color}-400 font-bold">${percent}%</span>
+                            </div>
+                            <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden">
+                                <div class="bg-${cat.color}-500 h-2 rounded-full" style="width: ${percent}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function filterAndNavigateCategory(catId) {
+            activeCategoryFilter = catId;
+            navigateTo('learn');
+            renderCategoryFilterPills();
+            renderLessonsGrid();
+        }
+
+        // Render Filter Pills in Learn View
+        function renderCategoryFilterPills() {
+            const container = document.getElementById('category-filters');
+            if (!container) return;
+
+            const allPills = [{ id: 'all', name: 'Semua Kategori' }, ...CATEGORIES];
+            container.innerHTML = allPills.map(p => {
+                const isActive = activeCategoryFilter === p.id;
+                const activeClass = isActive ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700';
+                return `
+                    <button onclick="setCategoryFilter('${p.id}')" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition ${activeClass}">
+                        ${p.name}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function setCategoryFilter(catId) {
+            activeCategoryFilter = catId;
+            renderCategoryFilterPills();
+            renderLessonsGrid();
+        }
+
+        // Render Lessons Cards
+        function renderLessonsGrid() {
+            const container = document.getElementById('lessons-grid');
+            if (!container) return;
+
+            const filtered = activeCategoryFilter === 'all' 
+                ? LESSONS 
+                : LESSONS.filter(l => l.kategori === activeCategoryFilter);
+
+            container.innerHTML = filtered.map(lesson => {
+                const isCompleted = state.materiSelesai.includes(lesson.id);
+                const categoryObj = CATEGORIES.find(c => c.id === lesson.kategori);
+
+                return `
+                    <div class="glass-card p-5 rounded-2xl border border-quest-border flex flex-col justify-between">
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-${categoryObj?.color || 'indigo'}-950 text-${categoryObj?.color || 'indigo'}-300 border border-${categoryObj?.color || 'indigo'}-800/50">
+                                    ${categoryObj?.name || lesson.kategori}
+                                </span>
+                                <span class="text-xs font-semibold text-slate-400">Level: ${lesson.tingkatKesulitan}</span>
+                            </div>
+                            <h3 class="font-bold text-white text-base leading-snug">${lesson.judul}</h3>
+                            <p class="text-xs text-slate-300 leading-relaxed">${lesson.deskripsi}</p>
+                        </div>
+                        
+                        <div class="mt-5 pt-3 border-t border-slate-800 flex items-center justify-between">
+                            <div class="flex items-center space-x-1.5">
+                                ${isCompleted 
+                                    ? '<span class="text-xs font-bold text-emerald-400 flex items-center space-x-1"><i class="ph-bold ph-check-circle"></i> Selesai</span>' 
+                                    : '<span class="text-xs text-amber-400 flex items-center space-x-1"><i class="ph-bold ph-circle"></i> Belum Selesai</span>'}
+                            </div>
+                            <button onclick="openLessonModal('${lesson.id}')" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition flex items-center space-x-1.5">
+                                <span>${isCompleted ? 'Pelajari Lagi' : 'Buka Modul'}</span>
+                                <i class="ph-bold ph-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Render Leaderboard
+        function renderLeaderboard() {
+            const container = document.getElementById('leaderboard-rows');
+            if (!container) return;
+
+            // Inject Current User into Leaderboard array dynamically
+            let fullBoard = [
+                ...DEMO_LEADERBOARD,
+                { name: `${state.namaAlias} (Anda)`, level: state.level, xp: state.xp, totalPoin: state.totalPoin, isUser: true, title: 'Pemain Utama' }
+            ];
+
+            // Sort by Total Points descending
+            fullBoard.sort((a, b) => b.totalPoin - a.totalPoin);
+
+            container.innerHTML = fullBoard.map((item, index) => {
+                const rank = index + 1;
+                let rankBadge = `<span class="font-bold text-slate-400">#${rank}</span>`;
+                if (rank === 1) rankBadge = '<i class="ph-fill ph-trophy text-amber-400 text-xl"></i>';
+                if (rank === 2) rankBadge = '<i class="ph-fill ph-medal text-slate-300 text-xl"></i>';
+                if (rank === 3) rankBadge = '<i class="ph-fill ph-medal text-amber-600 text-xl"></i>';
+
+                const rowBg = item.isUser ? 'bg-indigo-950/40 border-l-4 border-indigo-500' : 'hover:bg-slate-900/40';
+
+                return `
+                    <div class="p-4 flex items-center justify-between ${rowBg} transition">
+                        <div class="w-16 text-center flex items-center justify-center">${rankBadge}</div>
+                        <div class="flex-1 min-w-0 pr-4">
+                            <div class="font-bold text-sm ${item.isUser ? 'text-cyan-300' : 'text-white'} truncate">
+                                ${item.name}
+                            </div>
+                            <div class="text-[11px] text-slate-400">${item.title}</div>
+                        </div>
+                        <div class="w-24 text-center text-xs font-bold text-amber-400">
+                            Lv. ${item.level}
+                        </div>
+                        <div class="w-24 text-right font-mono font-bold text-emerald-400 text-sm">
+                            ${item.totalPoin} PTS
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Render Badges / Achievements
+        function renderBadgesGrid() {
+            const container = document.getElementById('badges-grid');
+            if (!container) return;
+
+            container.innerHTML = ACHIEVEMENTS.map(badge => {
+                const isUnlocked = state.badges.includes(badge.id);
+                return `
+                    <div class="glass-panel p-5 rounded-2xl border ${isUnlocked ? 'border-amber-500/40 bg-amber-950/10' : 'border-quest-border opacity-60'} flex items-start space-x-4">
+                        <div class="w-12 h-12 rounded-2xl ${isUnlocked ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' : 'bg-slate-800 text-slate-500'} flex items-center justify-center text-2xl flex-shrink-0">
+                            <i class="ph-bold ${badge.icon}"></i>
+                        </div>
+                        <div class="space-y-1 min-w-0">
+                            <div class="flex items-center justify-between">
+                                <h4 class="font-bold text-sm ${isUnlocked ? 'text-amber-300' : 'text-slate-400'}">${badge.nama}</h4>
+                                ${isUnlocked ? '<span class="text-[10px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 font-semibold">Terbuka</span>' : ''}
+                            </div>
+                            <p class="text-xs text-slate-300">${badge.deskripsi}</p>
+                            <div class="text-[10px] text-slate-400 pt-1 font-mono">Syarat: ${badge.syarat}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        /* ==========================================================================
+           4. DAILY CHALLENGE SYSTEM
+           ========================================================================== */
+
+        function getTodayDateString() {
+            const d = new Date();
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
+
+        function updateDailyChallengeUI() {
+            const todayStr = getTodayDateString();
+            document.getElementById('daily-date-tag').textContent = todayStr;
+
+            const isClaimed = state.dailyClaimedDate === todayStr;
+            const btn = document.getElementById('btn-claim-daily');
+            const desc = document.getElementById('daily-challenge-desc');
+
+            if (isClaimed) {
+                desc.textContent = 'Tantangan harian hari ini telah selesai! Kembali lagi besok untuk tantangan baru.';
+                btn.disabled = true;
+                btn.className = 'px-4 py-2 bg-slate-800 text-slate-400 font-bold text-xs rounded-xl cursor-not-allowed';
+                btn.innerHTML = '<i class="ph-bold ph-check"></i><span>Telah Diklaim</span>';
+            } else {
+                desc.textContent = 'Selesaikan 1 kuis sains atau baca 1 modul materi baru hari ini untuk mengklaim bonus XP!';
+                btn.disabled = false;
+                btn.className = 'px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs rounded-xl transition shadow-md flex items-center space-x-1.5 cursor-pointer';
+                btn.innerHTML = '<i class="ph-bold ph-gift"></i><span>Klaim Hadiah Harian</span>';
+            }
+        }
+
+        function claimDailyChallenge() {
+            const todayStr = getTodayDateString();
+            if (state.dailyClaimedDate === todayStr) return;
+
+            state.dailyClaimedDate = todayStr;
+            addRewards(50, 30);
+            showToast('🎁 Berhasil klaim Tantangan Harian (+50 XP, +30 PTS)!', 'success');
+            updateDailyChallengeUI();
+        }
+
+        /* ==========================================================================
+           5. LESSON MODAL & INTERACTIVE QUIZ LOGIC
+           ========================================================================== */
+
+        function openLessonModal(lessonId) {
+            const lesson = LESSONS.find(l => l.id === lessonId);
+            if (!lesson) return;
+
+            currentActiveLesson = lesson;
+            selectedQuizOption = null;
+
+            document.getElementById('modal-lesson-category').textContent = lesson.kategori;
+            document.getElementById('modal-lesson-title').textContent = lesson.judul;
+            document.getElementById('modal-lesson-text').innerHTML = lesson.konten;
+
+            // Render Illustrated Graphic SVG Header
+            renderLessonIllustration(lesson.svgType);
+
+            // Render Quiz First Question
+            const quiz = lesson.quizzes[0];
+            const isQuizDone = state.kuisSelesai.includes(quiz.id);
+
+            document.getElementById('quiz-question-text').textContent = quiz.pertanyaan;
+            document.getElementById('quiz-points-badge').textContent = isQuizDone ? 'Telah Dikerjakan (0 PTS)' : `+${quiz.poin} PTS`;
+
+            // Render Options
+            const optionsContainer = document.getElementById('quiz-options-list');
+            optionsContainer.innerHTML = quiz.pilihan.map((opt, idx) => `
+                <button onclick="selectQuizOption(${idx})" id="quiz-opt-${idx}" class="w-full text-left p-3 rounded-xl border border-slate-700 bg-slate-800/80 hover:bg-slate-700/80 text-xs sm:text-sm text-slate-200 font-medium transition flex items-center justify-between">
+                    <span>${String.fromCharCode(65 + idx)}. ${opt}</span>
+                    <i class="ph-bold ph-circle text-slate-500 text-lg" id="quiz-opt-icon-${idx}"></i>
+                </button>
+            `).join('');
+
+            // Reset feedback box & submit button
+            const fbBox = document.getElementById('quiz-feedback');
+            fbBox.classList.add('hidden');
+            
+            const submitBtn = document.getElementById('btn-submit-quiz');
+            submitBtn.disabled = false;
+            submitBtn.className = 'w-full py-3 bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-bold rounded-xl text-sm transition cursor-pointer';
+
+            document.getElementById('modal-lesson').classList.remove('hidden');
+        }
+
+        function closeLessonModal() {
+            document.getElementById('modal-lesson').classList.add('hidden');
+            currentActiveLesson = null;
+        }
+
+        function selectQuizOption(index) {
+            selectedQuizOption = index;
+            const quiz = currentActiveLesson.quizzes[0];
+
+            quiz.pilihan.forEach((_, idx) => {
+                const btn = document.getElementById(`quiz-opt-${idx}`);
+                const icon = document.getElementById(`quiz-opt-icon-${idx}`);
+                if (idx === index) {
+                    btn.className = 'w-full text-left p-3 rounded-xl border-2 border-indigo-500 bg-indigo-950/60 text-white font-semibold text-xs sm:text-sm transition flex items-center justify-between';
+                    icon.className = 'ph-bold ph-radio-button text-indigo-400 text-lg';
+                } else {
+                    btn.className = 'w-full text-left p-3 rounded-xl border border-slate-700 bg-slate-800/80 text-slate-300 text-xs sm:text-sm transition flex items-center justify-between';
+                    icon.className = 'ph-bold ph-circle text-slate-500 text-lg';
+                }
+            });
+        }
+
+        function submitQuizAnswer() {
+            if (selectedQuizOption === null) {
+                showToast('Pilih salah satu jawaban terlebih dahulu!', 'info');
+                return;
+            }
+
+            const quiz = currentActiveLesson.quizzes[0];
+            const isCorrect = selectedQuizOption === quiz.jawabanBenar;
+            const fbBox = document.getElementById('quiz-feedback');
+            const submitBtn = document.getElementById('btn-submit-quiz');
+
+            // Mark lesson completed
+            if (!state.materiSelesai.includes(currentActiveLesson.id)) {
+                state.materiSelesai.push(currentActiveLesson.id);
+            }
+
+            // Anti-Exploit Check: Grant Points/XP ONLY ONCE per Quiz ID
+            const isFirstAttempt = !state.kuisSelesai.includes(quiz.id);
+
+            fbBox.classList.remove('hidden');
+            if (isCorrect) {
+                fbBox.className = 'p-4 rounded-xl text-xs leading-relaxed space-y-1 bg-emerald-950/80 border border-emerald-700 text-emerald-200';
+                fbBox.innerHTML = `
+                    <div class="font-bold flex items-center space-x-1.5 text-sm">
+                        <i class="ph-bold ph-check-circle text-emerald-400"></i>
+                        <span>Jawaban Anda Tepat!</span>
+                    </div>
+                    <p class="mt-1">${quiz.penjelasan}</p>
+                `;
+
+                if (isFirstAttempt) {
+                    state.kuisSelesai.push(quiz.id);
+                    addRewards(30, quiz.poin);
+                    triggerConfetti();
+                    showToast(`+${quiz.poin} PTS & +30 XP Diperoleh!`, 'success');
+                } else {
+                    showToast('Jawaban benar! (Poin kuis ini sudah pernah diklaim sebelumnya)', 'info');
+                }
+            } else {
+                fbBox.className = 'p-4 rounded-xl text-xs leading-relaxed space-y-1 bg-rose-950/80 border border-rose-700 text-rose-200';
+                fbBox.innerHTML = `
+                    <div class="font-bold flex items-center space-x-1.5 text-sm">
+                        <i class="ph-bold ph-x-circle text-rose-400"></i>
+                        <span>Jawaban Kurang Tepat</span>
+                    </div>
+                    <p class="mt-1">${quiz.penjelasan}</p>
+                `;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.className = 'w-full py-3 bg-slate-800 text-slate-500 font-bold rounded-xl text-sm cursor-not-allowed';
+            saveState();
+        }
+
+        // Render Dynamic Decorative Illustrations inside Modals
+        function renderLessonIllustration(type) {
+            const box = document.getElementById('modal-lesson-illustration');
+            if (!box) return;
+
+            let svgContent = '';
+            if (type === 'gravity') {
+                svgContent = `
+                    <svg class="w-32 h-32 text-indigo-400 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+                    </svg>
+                `;
+            } else if (type === 'circuit') {
+                svgContent = `
+                    <svg class="w-36 h-36 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                `;
+            } else if (type === 'atom') {
+                svgContent = `
+                    <svg class="w-36 h-36 text-cyan-400 animate-spin" style="animation-duration: 10s;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="3" fill="currentColor"/>
+                        <ellipse cx="12" cy="12" rx="9" ry="3" stroke-width="1.5"/>
+                        <ellipse cx="12" cy="12" rx="9" ry="3" stroke-width="1.5" transform="rotate(60 12 12)"/>
+                        <ellipse cx="12" cy="12" rx="9" ry="3" stroke-width="1.5" transform="rotate(120 12 12)"/>
+                    </svg>
+                `;
+            } else {
+                svgContent = `
+                    <div class="text-4xl text-indigo-400 font-extrabold flex items-center space-x-3">
+                        <i class="ph-bold ph-atom"></i>
+                        <span>ScienceQuest Lab</span>
+                    </div>
+                `;
+            }
+
+            box.innerHTML = svgContent;
+        }
+
+        /* ==========================================================================
+           6. INTERACTIVE SIMULATIONS (CANVAS ENGINES)
+           ========================================================================== */
+
+        function switchSimTab(tabId) {
+            ['gravity', 'solar', 'circuit'].forEach(t => {
+                const panel = document.getElementById(`sim-panel-${t}`);
+                const btn = document.getElementById(`sim-tab-${t}`);
+                if (panel) panel.classList.add('hidden');
+                if (btn) {
+                    btn.classList.remove('border-indigo-500', 'text-indigo-400');
+                    btn.classList.add('border-transparent', 'text-gray-400');
+                }
+            });
+
+            const targetPanel = document.getElementById(`sim-panel-${tabId}`);
+            const targetBtn = document.getElementById(`sim-tab-${tabId}`);
+            if (targetPanel) targetPanel.classList.remove('hidden');
+            if (targetBtn) {
+                targetBtn.classList.add('border-indigo-500', 'text-indigo-400');
+                targetBtn.classList.remove('border-transparent', 'text-gray-400');
+            }
+
+            if (tabId === 'gravity') initGravityCanvas();
+            if (tabId === 'solar') initSolarCanvas();
+            if (tabId === 'circuit') initCircuitCanvas();
+        }
+
+        // --- SIMULATION 1: GRAVITY CANVASES ---
+        let gravityAnimId = null;
+        let ballY = 20;
+        let ballVel = 0;
+        let simTime = 0;
+        let isFalling = false;
+
+        function initGravityCanvas() {
+            const canvas = document.getElementById('gravityCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+
+            drawGravityScene(ctx, canvas.width, canvas.height);
+        }
+
+        function drawGravityScene(ctx, width, height) {
+            ctx.clearRect(0, 0, width, height);
+
+            // Draw Background Grid
+            ctx.strokeStyle = '#1E293B';
+            ctx.lineWidth = 1;
+            for (let x = 0; x < width; x += 40) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
+            }
+            for (let y = 0; y < height; y += 40) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
+            }
+
+            // Ground Line
+            const groundY = height - 40;
+            ctx.fillStyle = '#10B981';
+            ctx.fillRect(0, groundY, width, 40);
+
+            // Ball Radius based on mass slider
+            const mass = parseFloat(document.getElementById('sim-mass-input').value) || 5;
+            const radius = 10 + Math.min(mass, 40) * 0.4;
+
+            // Draw Ball
+            ctx.beginPath();
+            ctx.arc(width / 2, ballY, radius, 0, Math.PI * 2);
+            ctx.fillStyle = '#6366F1';
+            ctx.shadowColor = '#6366F1';
+            ctx.shadowBlur = 15;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            // Height indicator text
+            ctx.fillStyle = '#94A3B8';
+            ctx.font = '12px Inter';
+            ctx.fillText(`Posisi Y: ${Math.round(ballY)}px`, width / 2 + radius + 10, ballY + 4);
+        }
+
+        function startGravitySim() {
+            if (isFalling) return;
+            isFalling = true;
+
+            const canvas = document.getElementById('gravityCanvas');
+            const ctx = canvas.getContext('2d');
+            const heightInput = parseFloat(document.getElementById('sim-height-input').value);
+            const g = parseFloat(document.getElementById('sim-gravity-select').value);
+            const mass = parseFloat(document.getElementById('sim-mass-input').value);
+
+            ballY = 40;
+            ballVel = 0;
+            simTime = 0;
+            const dt = 0.03; // Time step
+            const groundY = canvas.height - 40;
+
+            function animate() {
+                if (!isFalling) return;
+
+                simTime += dt;
+                ballVel += g * dt * 3; // Scale factor for visual physics
+                ballY += ballVel * dt;
+
+                if (ballY >= groundY - 15) {
+                    ballY = groundY - 15;
+                    isFalling = false;
+                    
+                    // Final Calculation Outputs
+                    const totalTime = Math.sqrt((2 * heightInput) / g).toFixed(2);
+                    const finalVel = (g * totalTime).toFixed(2);
+                    const ek = (0.5 * mass * Math.pow(finalVel, 2)).toFixed(1);
+
+                    document.getElementById('out-sim-time').textContent = `${totalTime} s`;
+                    document.getElementById('out-sim-velocity').textContent = `${finalVel} m/s`;
+                    document.getElementById('out-sim-ek').textContent = `${ek} Joule`;
+                } else {
+                    gravityAnimId = requestAnimationFrame(animate);
+                }
+
+                drawGravityScene(ctx, canvas.width, canvas.height);
+            }
+
+            animate();
+        }
+
+        function resetGravitySim() {
+            isFalling = false;
+            if (gravityAnimId) cancelAnimationFrame(gravityAnimId);
+            ballY = 40;
+            simTime = 0;
+            document.getElementById('out-sim-time').textContent = '0.00 s';
+            document.getElementById('out-sim-velocity').textContent = '0.00 m/s';
+            document.getElementById('out-sim-ek').textContent = '0 Joule';
+            initGravityCanvas();
+        }
+
+        // --- SIMULATION 2: SOLAR SYSTEM ORBITS ---
+        let solarAnimId = null;
+        let isSolarRunning = true;
+        let solarAngle = 0;
+
+        function initSolarCanvas() {
+            const canvas = document.getElementById('solarCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+
+            if (solarAnimId) cancelAnimationFrame(solarAnimId);
+
+            const planets = [
+                { name: 'Merkurius', r: 45, speed: 0.04, color: '#A1A1AA', size: 4 },
+                { name: 'Venus', r: 75, speed: 0.025, color: '#FDE047', size: 6 },
+                { name: 'Bumi', r: 110, speed: 0.015, color: '#38BDF8', size: 7 },
+                { name: 'Mars', r: 150, speed: 0.01, color: '#F87171', size: 5 }
+            ];
+
+            function renderSolar() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                const cx = canvas.width / 2;
+                const cy = canvas.height / 2;
+
+                // Draw Sun
+                ctx.beginPath();
+                ctx.arc(cx, cy, 20, 0, Math.PI * 2);
+                ctx.fillStyle = '#F59E0B';
+                ctx.shadowColor = '#F59E0B';
+                ctx.shadowBlur = 30;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                // Draw Planets
+                planets.forEach(p => {
+                    // Draw Orbit Ring
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, p.r, 0, Math.PI * 2);
+                    ctx.strokeStyle = '#334155';
+                    ctx.stroke();
+
+                    // Calculate position
+                    const angle = solarAngle * (p.speed / 0.015);
+                    const px = cx + p.r * Math.cos(angle);
+                    const py = cy + p.r * Math.sin(angle);
+
+                    // Draw Planet Body
+                    ctx.beginPath();
+                    ctx.arc(px, py, p.size, 0, Math.PI * 2);
+                    ctx.fillStyle = p.color;
+                    ctx.fill();
+
+                    // Label
+                    ctx.fillStyle = '#94A3B8';
+                    ctx.font = '10px Inter';
+                    ctx.fillText(p.name, px + 8, py + 3);
+                });
+
+                if (isSolarRunning) solarAngle += 0.01;
+                solarAnimId = requestAnimationFrame(renderSolar);
+            }
+
+            renderSolar();
+        }
+
+        function toggleSolarSim() {
+            isSolarRunning = !isSolarRunning;
+            const btn = document.getElementById('btn-solar-toggle');
+            btn.textContent = isSolarRunning ? 'Pause Orbit' : 'Lanjutkan Orbit';
+        }
+
+        // --- SIMULATION 3: ELECTRIC CIRCUIT (HUKUM OHM) ---
+        let isCircuitOn = true;
+
+        function initCircuitCanvas() {
+            updateCircuitSim();
+        }
+
+        function toggleCircuitSwitch() {
+            isCircuitOn = !isCircuitOn;
+            const btn = document.getElementById('circuit-switch-btn');
+            if (isCircuitOn) {
+                btn.textContent = 'TERHUBUNG (ON)';
+                btn.className = 'px-4 py-1.5 bg-emerald-600 text-white font-bold text-xs rounded-lg shadow';
+            } else {
+                btn.textContent = 'TERPUTUS (OFF)';
+                btn.className = 'px-4 py-1.5 bg-rose-600 text-white font-bold text-xs rounded-lg shadow';
+            }
+            updateCircuitSim();
+        }
+
+        function updateCircuitSim() {
+            const canvas = document.getElementById('circuitCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+
+            const V = parseFloat(document.getElementById('circuit-voltage-input').value);
+            const R = parseFloat(document.getElementById('circuit-resistor-input').value);
+
+            document.getElementById('circuit-voltage-val').textContent = `${V.toFixed(1)} Volt`;
+            document.getElementById('circuit-resistor-val').textContent = `${R.toFixed(1)} Ohm`;
+
+            const I = isCircuitOn ? V / R : 0;
+            const P = isCircuitOn ? V * I : 0;
+
+            document.getElementById('out-circuit-current').textContent = `${I.toFixed(2)} Ampere`;
+            document.getElementById('out-circuit-power').textContent = `${P.toFixed(2)} Watt`;
+
+            let statusStr = 'Padam (Off)';
+            if (isCircuitOn) {
+                if (I < 0.3) statusStr = 'Redup';
+                else if (I < 1.2) statusStr = 'Terang Normal';
+                else statusStr = 'Sangat Terang (Tinggi)';
+            }
+            document.getElementById('out-circuit-status').textContent = statusStr;
+
+            // Draw Circuit Diagram on Canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+            const w = Math.min(canvas.width - 80, 400);
+            const h = 180;
+
+            // Circuit Wires
+            ctx.strokeStyle = isCircuitOn ? '#06B6D4' : '#475569';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(cx - w / 2, cy - h / 2, w, h);
+
+            // Battery (Left side)
+            ctx.fillStyle = '#0F172A';
+            ctx.fillRect(cx - w / 2 - 10, cy - 25, 20, 50);
+            ctx.fillStyle = '#38BDF8';
+            ctx.font = 'bold 12px Inter';
+            ctx.fillText(`${V}V`, cx - w / 2 - 35, cy + 4);
+
+            // Resistor Box (Top side)
+            ctx.fillStyle = '#1E293B';
+            ctx.fillRect(cx - 30, cy - h / 2 - 12, 60, 24);
+            ctx.strokeStyle = '#6366F1';
+            ctx.strokeRect(cx - 30, cy - h / 2 - 12, 60, 24);
+            ctx.fillStyle = '#A5B4FC';
+            ctx.fillText(`${R}Ω`, cx - 12, cy - h / 2 + 4);
+
+            // Light Bulb Glow (Right side)
+            const bulbX = cx + w / 2;
+            const bulbY = cy;
+
+            if (isCircuitOn && I > 0) {
+                const glowRadius = 15 + Math.min(I * 20, 45);
+                ctx.beginPath();
+                ctx.arc(bulbX, bulbY, glowRadius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(245, 158, 11, ${Math.min(I * 0.5, 0.85)})`;
+                ctx.fill();
+            }
+
+            // Bulb Circle
+            ctx.beginPath();
+            ctx.arc(bulbX, bulbY, 16, 0, Math.PI * 2);
+            ctx.fillStyle = isCircuitOn && I > 0 ? '#FBBF24' : '#334155';
+            ctx.fill();
+            ctx.strokeStyle = '#F59E0B';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        /* ==========================================================================
+           7. SPEC MODAL & TOAST UTILITIES
+           ========================================================================== */
+
+        function openSpecModal() {
+            const container = document.getElementById('spec-doc-content');
+            if (container) {
+                // Simple Markdown converter for previewing SPEC.md
+                container.innerHTML = SPEC_DOCUMENTATION_TEXT
+                    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                    .replace(/^\- (.*$)/gim, '<li>$1</li>')
+                    .replace(/\*\*(.* animate-bounce)\*\*/gim, '<b>$1</b>')
+                    .replace(/\*\*(.*)\*\*/gim, '<b>$1</b>')
+                    .replace(/`([^`]+)`/g, '<code>$1</code>');
+            }
+            document.getElementById('modal-spec').classList.remove('hidden');
+        }
+
+        function closeSpecModal() {
+            document.getElementById('modal-spec').classList.add('hidden');
+        }
+
+        function showToast(msg, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            const bgClass = type === 'success' ? 'bg-emerald-900/90 border-emerald-500 text-emerald-100' : 'bg-indigo-900/90 border-indigo-500 text-indigo-100';
+
+            toast.className = `p-3.5 px-4 rounded-xl border ${bgClass} backdrop-blur-md shadow-2xl text-xs sm:text-sm font-semibold flex items-center space-x-2 transition-all transform translate-y-2 pointer-events-auto opacity-100`;
+            toast.innerHTML = `
+                <i class="ph-bold ${type === 'success' ? 'ph-sparkle text-emerald-400' : 'ph-info text-indigo-400'} text-lg"></i>
+                <span>${msg}</span>
+            `;
+
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function triggerConfetti() {
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 80,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+            }
+        }
+
+        // Live Event Listeners for Range Sliders
+        document.addEventListener('DOMContentLoaded', () => {
+            loadState();
+            updateUI();
+
+            // Slider bindings
+            const simHeight = document.getElementById('sim-height-input');
+            const simMass = document.getElementById('sim-mass-input');
+            const simGrav = document.getElementById('sim-gravity-select');
+
+            if (simHeight) {
+                simHeight.addEventListener('input', (e) => {
+                    document.getElementById('sim-height-val').textContent = `${e.target.value} m`;
+                    initGravityCanvas();
+                });
+            }
+            if (simMass) {
+                simMass.addEventListener('input', (e) => {
+                    document.getElementById('sim-mass-val').textContent = `${e.target.value} kg`;
+                    initGravityCanvas();
+                });
+            }
+            if (simGrav) {
+                simGrav.addEventListener('change', (e) => {
+                    const txt = e.target.options[e.target.selectedIndex].text;
+                    document.getElementById('sim-gravity-val').textContent = txt;
+                });
+            }
+
+            // Window Resize redraws canvas smoothly
+            window.addEventListener('resize', () => {
+                initGravityCanvas();
+                initSolarCanvas();
+                initCircuitCanvas();
+            });
+        });
+    </script>
+</body>
+</html>

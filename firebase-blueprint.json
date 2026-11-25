@@ -1,0 +1,257 @@
+{
+  "entities": {
+    "UserPrivateProfile": {
+      "title": "UserPrivateProfile",
+      "description": "Private account identity record for a ScienceQuest user (isolated from public collections).",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID matching the document ID."
+        },
+        "username": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 32,
+          "pattern": "^[a-zA-Z0-9_.\\-]+$",
+          "description": "Unique student username handle."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "minLength": 3,
+          "maxLength": 120,
+          "description": "Account email address (private PII)."
+        },
+        "authProvider": {
+          "type": "string",
+          "enum": ["google", "password"],
+          "description": "Sign-in provider used during account creation."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of account creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last profile update."
+        }
+      },
+      "required": ["uid", "username", "authProvider", "createdAt", "updatedAt"]
+    },
+    "UserProgress": {
+      "title": "UserProgress",
+      "description": "Learning progress, XP, level, completed lessons/quizzes, earned badges, and premium entitlement for a user.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Owner Firebase Auth UID."
+        },
+        "namaAlias": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32,
+          "description": "Display name shown in the learning dashboard."
+        },
+        "xp": {
+          "type": "integer",
+          "description": "Total experience points earned."
+        },
+        "level": {
+          "type": "integer",
+          "description": "Current level calculated from XP."
+        },
+        "totalPoin": {
+          "type": "integer",
+          "description": "Total quiz and challenge points."
+        },
+        "materiSelesai": {
+          "type": "array",
+          "description": "List of completed lesson IDs."
+        },
+        "kuisSelesai": {
+          "type": "array",
+          "description": "List of completed quiz question IDs."
+        },
+        "badges": {
+          "type": "array",
+          "description": "List of unlocked achievement badge IDs."
+        },
+        "dailyClaimedDate": {
+          "type": "string",
+          "maxLength": 16,
+          "pattern": "^(\\d{4}-\\d{2}-\\d{2})?$",
+          "description": "YYYY-MM-DD of last claimed daily challenge."
+        },
+        "isPremium": {
+          "type": "boolean",
+          "description": "Whether the user has unlocked the Premium Achievements feature."
+        },
+        "premiumPlan": {
+          "type": "string",
+          "maxLength": 40,
+          "pattern": "^(premium_achievements)?$",
+          "description": "Active premium plan identifier."
+        },
+        "premiumPaymentId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]*$",
+          "description": "Payment transaction ID that activated premium access."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last progress sync."
+        }
+      },
+      "required": [
+        "uid",
+        "namaAlias",
+        "xp",
+        "level",
+        "totalPoin",
+        "materiSelesai",
+        "kuisSelesai",
+        "badges",
+        "dailyClaimedDate",
+        "isPremium",
+        "premiumPlan",
+        "premiumPaymentId",
+        "updatedAt"
+      ]
+    },
+    "LeaderboardEntry": {
+      "title": "LeaderboardEntry",
+      "description": "Public non-PII scoreboard record for ScienceQuest players.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Owner Firebase Auth UID."
+        },
+        "namaAlias": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32,
+          "description": "Public display name on leaderboard."
+        },
+        "level": {
+          "type": "integer",
+          "description": "Player level."
+        },
+        "totalPoin": {
+          "type": "integer",
+          "description": "Total points for ranking."
+        },
+        "isPublic": {
+          "type": "boolean",
+          "description": "Explicit opt-in flag allowing authenticated leaderboard listing."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last score update."
+        }
+      },
+      "required": ["uid", "namaAlias", "level", "totalPoin", "isPublic", "updatedAt"]
+    },
+    "PaymentTransaction": {
+      "title": "PaymentTransaction",
+      "description": "QR payment transaction record for ScienceQuest Premium plan.",
+      "type": "object",
+      "properties": {
+        "paymentId": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Unique payment transaction ID matching document ID."
+        },
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Buyer Firebase Auth UID."
+        },
+        "planId": {
+          "type": "string",
+          "enum": ["premium_achievements"],
+          "description": "Purchased premium plan ID."
+        },
+        "amountIdr": {
+          "type": "integer",
+          "description": "Payment amount in Indonesian Rupiah (1 IDR for test plan)."
+        },
+        "method": {
+          "type": "string",
+          "enum": ["qris"],
+          "description": "Payment method identifier."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "paid", "cancelled"],
+          "description": "Lifecycle state of the payment transaction."
+        },
+        "qrPayload": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 256,
+          "description": "Encoded QR payment string."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of payment creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last payment status change."
+        }
+      },
+      "required": [
+        "paymentId",
+        "uid",
+        "planId",
+        "amountIdr",
+        "method",
+        "status",
+        "qrPayload",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserPrivateProfile" },
+      "description": "Private user account metadata isolated per owner UID."
+    },
+    "/userProgress/{userId}": {
+      "schema": { "$ref": "#/entities/UserProgress" },
+      "description": "Private per-user ScienceQuest learning progress, achievements, and premium entitlement."
+    },
+    "/leaderboard/{userId}": {
+      "schema": { "$ref": "#/entities/LeaderboardEntry" },
+      "description": "Public non-PII ScienceQuest leaderboard entries."
+    },
+    "/payments/{paymentId}": {
+      "schema": { "$ref": "#/entities/PaymentTransaction" },
+      "description": "Per-user QR payment transactions for Premium activation."
+    }
+  }
+}

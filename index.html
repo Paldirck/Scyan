@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ScienceQuest — Platform Pembelajaran Sains Interaktif</title>
+    <meta
+      name="description"
+      content="Platform pembelajaran sains interaktif dan gamifikasi (Fisika, Kimia, Biologi, Astronomi) dengan simulasi laboratorium berbasis HTML5 Canvas."
+    />
+    <meta property="og:title" content="ScienceQuest — Platform Pembelajaran Sains Interaktif" />
+    <meta
+      property="og:description"
+      content="Platform pembelajaran sains interaktif dan gamifikasi (Fisika, Kimia, Biologi, Astronomi) dengan simulasi laboratorium berbasis HTML5 Canvas."
+    />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="is-unauthenticated">
+    <a href="#main-content" class="skip-link">Lewati ke konten utama</a>
+
+    <!-- Top Navigation Bar (Strict 3-Zone Contract) -->
+    <header class="top-bar">
+      <div class="top-bar-inner">
+        <a href="#dashboard" class="brand-link" data-nav="dashboard">
+          ScienceQuest
+        </a>
+
+        <nav class="top-nav" aria-label="Navigasi Utama">
+          <button type="button" class="top-nav-link is-active" data-nav="dashboard">Dashboard</button>
+          <button type="button" class="top-nav-link" data-nav="learn">Materi &amp; Kuis</button>
+          <button type="button" class="top-nav-link" data-nav="simulations">Lab Simulasi</button>
+          <button type="button" class="top-nav-link" data-nav="leaderboard">Leaderboard</button>
+          <button type="button" class="top-nav-link" data-nav="achievements">Pencapaian</button>
+          <button type="button" class="top-nav-link" data-nav="settings">Pengaturan</button>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Mobile Bottom / Scrollable Sub-Nav (Visible on < 768px) -->
+    <nav class="mobile-nav" aria-label="Navigasi Mobile">
+      <button type="button" class="mobile-nav-link is-active" data-nav="dashboard">Dashboard</button>
+      <button type="button" class="mobile-nav-link" data-nav="learn">Materi &amp; Kuis</button>
+      <button type="button" class="mobile-nav-link" data-nav="simulations">Simulasi</button>
+      <button type="button" class="mobile-nav-link" data-nav="leaderboard">Peringkat</button>
+      <button type="button" class="mobile-nav-link" data-nav="achievements">Lencana</button>
+      <button type="button" class="mobile-nav-link" data-nav="settings">Pengaturan</button>
+    </nav>
+
+    <!-- Main Workspace Shell -->
+    <div class="workspace-shell">
+      <!-- Main Content Views -->
+      <main id="main-content" class="main-stage" tabindex="-1">
+        <section id="view-auth" class="view-section is-hidden"></section>
+        <section id="view-dashboard" class="view-section"></section>
+        <section id="view-learn" class="view-section is-hidden"></section>
+        <section id="view-simulations" class="view-section is-hidden"></section>
+        <section id="view-leaderboard" class="view-section is-hidden"></section>
+        <section id="view-achievements" class="view-section is-hidden"></section>
+        <section id="view-settings" class="view-section is-hidden"></section>
+      </main>
+    </div>
+
+    <!-- Modal Root -->
+    <div id="modal-root"></div>
+
+    <!-- Toast Notification Live Region -->
+    <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
